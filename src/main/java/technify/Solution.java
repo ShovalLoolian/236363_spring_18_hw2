@@ -20,6 +20,8 @@ public class Solution {
         PreparedStatement pstmt_users = null;
         PreparedStatement pstmt_songs = null;
         PreparedStatement pstmt_playlists = null;
+        PreparedStatement pstmt_follows = null;
+        PreparedStatement pstmt_consistOf = null;
 
         try {
             pstmt_users = connection.prepareStatement("CREATE TABLE Users\n" +
@@ -63,11 +65,31 @@ public class Solution {
                     ")");
             pstmt_playlists.execute();
 
+            pstmt_follows = connection.prepareStatement("CREATE TABLE Follows\n" +
+                    "(\n" +
+                    "    user_id integer,\n" +
+                    "    playlist_id integer ,\n" +
+                    "    PRIMARY KEY (user_id, playlist_id),\n" +
+                    "    FOREIGN KEY (playlist_id) REFERENCES Playlists (playlist_id)\n" +
+                    ")");
+            pstmt_follows.execute();
+
+            pstmt_consistOf = connection.prepareStatement("CREATE TABLE ConsistOf\n" +
+                    "(\n" +
+                    "    playlist_id integer,\n" +
+                    "    song_id integer ,\n" +
+                    "    PRIMARY KEY (playlist_id, song_id),\n" +
+                    "    FOREIGN KEY (song_id) REFERENCES Songs (song_id)\n" +
+                    ")");
+            pstmt_consistOf.execute();
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
         finally {
             try {
+                pstmt_consistOf.close();
+                pstmt_follows.close();
                 pstmt_users.close();
                 pstmt_songs.close();
                 pstmt_playlists.close();
@@ -89,24 +111,38 @@ public class Solution {
         PreparedStatement pstmt_users = null;
         PreparedStatement pstmt_songs = null;
         PreparedStatement pstmt_playlists = null;
+        PreparedStatement pstmt_follows = null;
+        PreparedStatement pstmt_consistOf = null;
+
         try {
-            pstmt_users = connection.prepareStatement(
-                    "DELETE FROM Users ");
-            pstmt_users.execute();
+
+            pstmt_consistOf = connection.prepareStatement(
+                    "DELETE FROM ConsistOf ");
+            pstmt_consistOf.execute();
 
             pstmt_songs = connection.prepareStatement(
                     "DELETE FROM Songs ");
             pstmt_songs.execute();
 
+            pstmt_follows = connection.prepareStatement(
+                    "DELETE FROM Follows ");
+            pstmt_follows.execute();
+
             pstmt_playlists = connection.prepareStatement(
                     "DELETE FROM Playlists ");
             pstmt_playlists.execute();
+
+            pstmt_users = connection.prepareStatement(
+                    "DELETE FROM Users ");
+            pstmt_users.execute();
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
         finally {
             try {
+                pstmt_follows.close();
+                pstmt_consistOf.close();
                 pstmt_users.close();
                 pstmt_songs.close();
                 pstmt_playlists.close();
@@ -128,23 +164,32 @@ public class Solution {
         PreparedStatement pstmt_users = null;
         PreparedStatement pstmt_songs = null;
         PreparedStatement pstmt_playlists = null;
+        PreparedStatement pstmt_follows = null;
+        PreparedStatement pstmt_consistOf = null;
 
         try {
+            pstmt_consistOf = connection.prepareStatement("DROP TABLE IF EXISTS ConsistOf");
+            pstmt_consistOf.execute();
+            pstmt_follows = connection.prepareStatement("DROP TABLE IF EXISTS Follows");
+            pstmt_follows.execute();
+            pstmt_playlists = connection.prepareStatement("DROP TABLE IF EXISTS Playlists");
+            pstmt_playlists.execute();
             pstmt_users = connection.prepareStatement("DROP TABLE IF EXISTS Users");
             pstmt_users.execute();
             pstmt_songs = connection.prepareStatement("DROP TABLE IF EXISTS Songs");
             pstmt_songs.execute();
-            pstmt_playlists = connection.prepareStatement("DROP TABLE IF EXISTS Playlists");
-            pstmt_playlists.execute();
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
         finally {
             try {
+                pstmt_follows.close();
+                pstmt_consistOf.close();
                 pstmt_users.close();
                 pstmt_songs.close();
                 pstmt_playlists.close();
+
             } catch (SQLException e) {
                 e.printStackTrace();
             }
