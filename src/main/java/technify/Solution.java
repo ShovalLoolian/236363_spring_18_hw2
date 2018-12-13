@@ -530,8 +530,40 @@ public class Solution {
 
     public static ReturnValue deletePlaylist(Playlist playlist)
     {
-    	//TODO: NIV
-        return null;
+			//TODO: NIV
+			if(playlist == null)
+			{
+				return BAD_PARAMS;
+			}
+    	   Connection connection = DBConnector.getConnection();
+           PreparedStatement pstmt = null;
+           ReturnValue return_value = OK;
+           try {
+               pstmt = connection.prepareStatement(
+                       "DELETE FROM Playlists " +
+                               "where playlist_id = "+ playlist.getId());
+               int affectedRows = pstmt.executeUpdate();
+               if(affectedRows > 0)
+            	   return_value = OK;
+               else
+            	   return_value = NOT_EXISTS;
+           } catch (SQLException e) {
+               //e.printStackTrace()();
+        	   return_value = getErrorValue(e);
+           }
+           finally {
+               try {
+                   pstmt.close();
+               } catch (SQLException e) {
+                   //e.printStackTrace()();
+               }
+               try {
+                   connection.close();
+               } catch (SQLException e) {
+                   //e.printStackTrace()();
+               }
+           }
+        return return_value;
     }
 
     public static ReturnValue updatePlaylist(Playlist playlist)

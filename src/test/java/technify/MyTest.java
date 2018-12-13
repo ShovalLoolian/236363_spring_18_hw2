@@ -226,5 +226,61 @@ public class MyTest extends AbstractTest {
 
     }
 
+    @Test
+    public void deletePlaylistTest() 
+    {
+    	ReturnValue res;
+        Playlist playlist1 = new Playlist();
+        playlist1.setId(1);
+        playlist1.setGenre("Pop");
+        playlist1.setDescription("play1");
+        
+        Playlist playlist2 = new Playlist();
+        playlist2.setId(2);
+        playlist2.setGenre("Rock");
+        playlist2.setDescription("play2");
+        
+        Playlist playlist_bad = new Playlist();
+        playlist_bad.setId(-2);
+        playlist_bad.setGenre("Rock");
+        playlist_bad.setDescription("play2");
+        
+        res = Solution.addPlaylist(playlist1);
+        assertEquals(OK , res);
+        res = Solution.addPlaylist(playlist2);
+        assertEquals(OK , res);
+        res = Solution.addPlaylist(playlist_bad);
+        assertEquals(BAD_PARAMS , res);
+        res = Solution.addPlaylist(playlist2);
+        assertEquals(ALREADY_EXISTS , res);
+      
+        Playlist temp_playlist = Solution.getPlaylist(1);
+        assertEquals(true, temp_playlist.getId() == 1);
+        res = Solution.deletePlaylist(temp_playlist);
+        assertEquals(OK , res);
+        temp_playlist = Solution.getPlaylist(1);
+        assertEquals(true, temp_playlist.getId() == -1);
+        
+        temp_playlist = Solution.getPlaylist(2);
+        assertEquals(true, temp_playlist.getId() == 2);
+        res = Solution.deletePlaylist(temp_playlist);
+        assertEquals(OK , res);
+        temp_playlist = Solution.getPlaylist(2);
+        assertEquals(true, temp_playlist.getId() == -1);
+        
+        temp_playlist = Solution.getPlaylist(-2);
+        assertEquals(true, temp_playlist.getId() == -1);
+        
+        res = Solution.deletePlaylist(temp_playlist);
+        assertEquals(NOT_EXISTS , res);
+        
+        Playlist temp2 = new Playlist();
+        temp2.setId(10);
+        temp2.setGenre("genre");
+        temp2.setDescription("Description");
+        
+        res = Solution.deletePlaylist(temp2);
+        assertEquals(NOT_EXISTS , res);
+    }
 }//End class
 
