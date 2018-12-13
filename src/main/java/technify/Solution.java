@@ -541,7 +541,8 @@ public class Solution {
            try {
                pstmt = connection.prepareStatement(
                        "DELETE FROM Playlists " +
-                               "where playlist_id = "+ playlist.getId());
+                               "where playlist_id = ?");
+               pstmt.setInt(1,playlist.getId());
                int affectedRows = pstmt.executeUpdate();
                if(affectedRows > 0)
             	   return_value = OK;
