@@ -121,5 +121,110 @@ public class MyTest extends AbstractTest {
 //        res = Solution.followPlaylist(101, 10);
 //        assertEquals(NOT_EXISTS , res);
 //    }
-}
+    
+    @Test
+    public void addPlaylistTest() 
+    {
+    	ReturnValue res;
+        Playlist playlist1 = new Playlist();
+        playlist1.setId(1);
+        playlist1.setGenre("Pop");
+        playlist1.setDescription("play1");
+        
+        Playlist playlist2 = new Playlist();
+        playlist2.setId(2);
+        playlist2.setGenre("Pop");
+        playlist2.setDescription("play2");
+        
+        res = Solution.addPlaylist(playlist1);
+        assertEquals(OK , res);
+        res = Solution.addPlaylist(playlist2);
+        assertEquals(OK , res);
+        
+        res = Solution.addPlaylist(playlist1);
+        assertEquals(ALREADY_EXISTS , res);
+        
+        Playlist playlist_bad = new Playlist();
+        playlist_bad.setId(-1);
+        playlist_bad.setGenre("Pop");
+        playlist_bad.setDescription("play1");
+        
+        res = Solution.addPlaylist(playlist_bad);
+        assertEquals(BAD_PARAMS , res);
+        
+        playlist_bad.setId(14);
+        playlist_bad.setGenre(null);
+        playlist_bad.setDescription("play1");
+        
+        res = Solution.addPlaylist(playlist_bad);
+        assertEquals(BAD_PARAMS , res);
+        
+        playlist_bad.setId(14);
+        playlist_bad.setGenre("genere");
+        playlist_bad.setDescription(null);
+        
+        res = Solution.addPlaylist(playlist_bad);
+        assertEquals(BAD_PARAMS , res);
+        
+        playlist_bad.setId(0);
+        playlist_bad.setGenre(null);
+        playlist_bad.setDescription(null);
+        
+        res = Solution.addPlaylist(playlist_bad);
+        assertEquals(BAD_PARAMS , res);
+        
+        playlist_bad.setId(14);
+        playlist_bad.setGenre("genere");
+        playlist_bad.setDescription("song22");
+        
+        res = Solution.addPlaylist(playlist_bad);
+        assertEquals(OK , res);
+    }
+
+    @Test
+    public void getPlaylistTest() 
+    {
+    	ReturnValue res;
+        Playlist playlist1 = new Playlist();
+        playlist1.setId(1);
+        playlist1.setGenre("Pop");
+        playlist1.setDescription("play1");
+        
+        Playlist playlist2 = new Playlist();
+        playlist2.setId(2);
+        playlist2.setGenre("Rock");
+        playlist2.setDescription("play2");
+        
+        Playlist playlist_bad = new Playlist();
+        playlist_bad.setId(-2);
+        playlist_bad.setGenre("Rock");
+        playlist_bad.setDescription("play2");
+        
+        res = Solution.addPlaylist(playlist1);
+        assertEquals(OK , res);
+        res = Solution.addPlaylist(playlist2);
+        assertEquals(OK , res);
+        res = Solution.addPlaylist(playlist_bad);
+        assertEquals(BAD_PARAMS , res);
+        res = Solution.addPlaylist(playlist2);
+        assertEquals(ALREADY_EXISTS , res);
+      
+        Playlist temp_playlist = Solution.getPlaylist(1);
+        assertEquals(true, temp_playlist.getId() == 1);
+        assertEquals(true, temp_playlist.getGenre().equals("Pop"));
+        assertEquals(true, temp_playlist.getDescription().equals("play1"));
+        
+       temp_playlist = Solution.getPlaylist(2);
+        assertEquals(true, temp_playlist.getId() == 2);
+        assertEquals(true, temp_playlist.getGenre().equals("Rock"));
+        assertEquals(true, temp_playlist.getDescription().equals("play2"));
+        
+        temp_playlist = Solution.getPlaylist(-2);
+        assertEquals(true, temp_playlist.getId() == -1);
+        assertEquals(true, temp_playlist.getGenre() == (null));
+        assertEquals(true, temp_playlist.getDescription() == (null));
+
+    }
+
+}//End class
 

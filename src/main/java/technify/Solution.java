@@ -27,28 +27,23 @@ public class Solution {
             pstmt_users = connection.prepareStatement("CREATE TABLE Users\n" +
                 "(\n" +
                 "    user_id integer,\n" +
-                "    user_name text ,\n" +
-                "    country text ,\n" +
-                "    premium boolean ,\n" +
+                "    user_name text NOT NULL,\n" +
+                "    country text NOT NULL,\n" +
+                "    premium boolean NOT NULL,\n" +
                 "    PRIMARY KEY (user_id),\n" +
-                "    CHECK (user_id > 0),\n" +
-                "    CHECK (user_name != null),\n" +
-                "    CHECK (country != null),\n" +
-                "    CHECK (premium != null)\n" +
+                "    CHECK (user_id > 0)\n" +
                 ")");
             pstmt_users.execute();
 
             pstmt_songs = connection.prepareStatement("CREATE TABLE Songs\n" +
                     "(\n" +
                     "    song_id integer,\n" +
-                    "    song_name text ,\n" +
-                    "    genre text ,\n" +
+                    "    song_name text NOT NULL,\n" +
+                    "    genre text NOT NULL,\n" +
                     "    country text ,\n" +
                     "    play_count integer ,\n" +
                     "    PRIMARY KEY (song_id),\n" +
                     "    CHECK (song_id > 0),\n" +
-                    "    CHECK (song_name != null),\n" +
-                    "    CHECK (genre != null),\n" +
                     "    CHECK (play_count >= 0)\n" +
                     ")");
             pstmt_songs.execute();
@@ -56,12 +51,10 @@ public class Solution {
             pstmt_playlists = connection.prepareStatement("CREATE TABLE Playlists\n" +
                     "(\n" +
                     "    playlist_id integer,\n" +
-                    "    genre text ,\n" +
-                    "    description text ,\n" +
+                    "    genre text NOT NULL,\n" +
+                    "    description text NOT NULL,\n" +
                     "    PRIMARY KEY (playlist_id),\n" +
-                    "    CHECK (playlist_id > 0),\n" +
-                    "    CHECK (genre != null),\n" +
-                    "    CHECK (description != null)\n" +
+                    "    CHECK (playlist_id > 0)\n" +
                     ")");
             pstmt_playlists.execute();
 
@@ -467,29 +460,95 @@ public class Solution {
 
     public static ReturnValue addPlaylist(Playlist playlist)
     {
-        return null;
+    	//TODO: NIV
+    	Connection connection = DBConnector.getConnection();
+        PreparedStatement pstmt_playlists = null;
+        ReturnValue return_value = OK;
+        
+        try {
+            	pstmt_playlists = connection.prepareStatement("INSERT INTO Playlists" +
+                        " VALUES (?, ?, ?)");
+            	pstmt_playlists.setInt(1,playlist.getId());
+            	pstmt_playlists.setString(2, playlist.getGenre());
+            	pstmt_playlists.setString(3,playlist.getDescription());
+            	pstmt_playlists.execute();
+            	return_value = OK;
+        } 
+        catch (SQLException e) 
+        {
+            return_value = getErrorValue(e);
+        }
+        finally {
+            try {
+            	pstmt_playlists.close();
+            } catch (SQLException e) {
+                return_value = ERROR;
+            }
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                return_value = ERROR;
+            }
+        }
+        return return_value;
     }
 
     public static Playlist getPlaylist(Integer playlistId)
     {
-        return null;
+    	//TODO: NIV
+    	 Connection connection = DBConnector.getConnection();
+         PreparedStatement pstmt = null;
+         Playlist return_playlist = new Playlist();
+
+         try {
+             pstmt = connection.prepareStatement("SELECT * FROM Playlists WHERE playlist_id = " + playlistId);
+             ResultSet results = pstmt.executeQuery();
+             if(results.next() == true) {
+            	 return_playlist.setId(results.getInt("playlist_id"));
+            	 return_playlist.setGenre(results.getString("genre"));
+            	 return_playlist.setDescription(results.getString("description"));
+             }
+             results.close();
+         } catch (SQLException e) {
+             e.printStackTrace();
+             return_playlist = return_playlist.badPlaylist(); 
+         }
+         finally {
+             try {
+                 pstmt.close();
+             } catch (SQLException e) {
+                 e.printStackTrace();
+             }
+             try {
+                 connection.close();
+             } catch (SQLException e) {
+                 e.printStackTrace();
+             }
+         }
+         return return_playlist;
     }
 
     public static ReturnValue deletePlaylist(Playlist playlist)
     {
+    	//TODO: NIV
         return null;
     }
 
     public static ReturnValue updatePlaylist(Playlist playlist)
     {
+    	//TODO: NIV
         return null;
     }
 
-    public static ReturnValue addSongToPlaylist(Integer songid, Integer playlistId){
+    public static ReturnValue addSongToPlaylist(Integer songid, Integer playlistId)
+    {
+    	//TODO: NIV
         return null;
     }
 
-    public static ReturnValue removeSongFromPlaylist(Integer songid, Integer playlistId){
+    public static ReturnValue removeSongFromPlaylist(Integer songid, Integer playlistId)
+    {
+    	//TODO: NIV
         return null;
     }
 
@@ -505,7 +564,9 @@ public class Solution {
         return null;
     }
 
-    public static Integer getPlaylistTotalPlayCount(Integer playlistId){
+    public static Integer getPlaylistTotalPlayCount(Integer playlistId)
+    {
+    	//TODO: NIV
         return null;
     }
 
@@ -513,7 +574,9 @@ public class Solution {
         return null;
     }
 
-    public static String getMostPopularSong(){
+    public static String getMostPopularSong()
+    {
+    	//TODO: NIV
         return null;
     }
 
@@ -521,7 +584,9 @@ public class Solution {
         return null;
     }
 
-    public static ArrayList<Integer> hottestPlaylistsOnTechnify(){
+    public static ArrayList<Integer> hottestPlaylistsOnTechnify()
+    {
+    	//TODO: NIV
         return null;
     }
 
@@ -533,14 +598,39 @@ public class Solution {
         return null;
     }
 
-    public static ArrayList<Integer> getPlaylistRecommendation (Integer userId){
+    public static ArrayList<Integer> getPlaylistRecommendation (Integer userId)
+    {
+    	//TODO: NIV
         return null;
     }
 
-    public static ArrayList<Integer> getSongsRecommendationByGenre(Integer userId, String genre){
+    public static ArrayList<Integer> getSongsRecommendationByGenre(Integer userId, String genre)
+    {
+    	//TODO: NIV
         return null;
     }
 
-
+    //========================= Helper Functions =======================================
+    private static ReturnValue getErrorValue(SQLException e)
+    {
+    	if(Integer.valueOf(e.getSQLState()) ==
+    			PostgreSQLErrorCodes.CHECK_VIOLATION.getValue() ||
+    			Integer.valueOf(e.getSQLState()) ==
+    			PostgreSQLErrorCodes.NOT_NULL_VIOLATION.getValue())
+		{
+    		return BAD_PARAMS;
+		}
+    	if(Integer.valueOf(e.getSQLState()) ==
+    			PostgreSQLErrorCodes.UNIQUE_VIOLATION.getValue())
+		{
+    		return ALREADY_EXISTS;
+		}
+    	if(Integer.valueOf(e.getSQLState()) ==
+    			PostgreSQLErrorCodes.FOREIGN_KEY_VIOLATION.getValue())
+		{
+    		return BAD_PARAMS; //???
+		}
+    	return ERROR;
+    }
 }
 
