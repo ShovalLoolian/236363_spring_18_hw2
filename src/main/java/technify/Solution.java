@@ -510,7 +510,7 @@ public class Solution {
              }
              results.close();
          } catch (SQLException e) {
-             e.printStackTrace();
+             //e.printStackTrace();
              return_playlist = return_playlist.badPlaylist(); 
          }
          finally {
@@ -570,13 +570,83 @@ public class Solution {
     public static ReturnValue updatePlaylist(Playlist playlist)
     {
     	//TODO: NIV
-        return null;
+    	//check if playlist is null?
+    	 Connection connection = DBConnector.getConnection();
+         PreparedStatement pstmt = null;
+         ReturnValue return_value = OK;
+         try {
+             pstmt = connection.prepareStatement(
+                     "UPDATE Playlists " +
+                             "SET description = ? " +
+                             "where playlist_id = ?");
+             pstmt.setInt(2,playlist.getId());
+             pstmt.setString(1, playlist.getDescription());
+             int affectedRows = pstmt.executeUpdate();
+             if(affectedRows > 0)
+          	   return_value = OK;
+             else
+          	   return_value = NOT_EXISTS;
+         } catch (SQLException e) {
+             //e.printStackTrace()();
+        	 return_value = getErrorValue(e);
+         }
+         finally {
+             try {
+                 pstmt.close();
+             } catch (SQLException e) {
+                 //e.printStackTrace()();
+            	 return_value = ERROR;
+             }
+             try {
+                 connection.close();
+             } catch (SQLException e) {
+                 //e.printStackTrace()();
+            	 return_value = ERROR;
+             }
+         }
+        return return_value;
     }
 
     public static ReturnValue addSongToPlaylist(Integer songid, Integer playlistId)
     {
     	//TODO: NIV
-        return null;
+    	 Connection connection = DBConnector.getConnection();
+         PreparedStatement pstmt = null;
+         ReturnValue return_value = OK;
+         
+         String queryForPlaylist = "SELECT * FROM Playlists WHERE playlist_id = "+ playlistId
+        		 + " AND genre IN (SELECT genre FROM Songs WHERE song_id = "+songid + ")";
+         
+         try {
+             pstmt = connection.prepareStatement(queryForPlaylist);
+             ResultSet results = pstmt.executeQuery();
+             if(results.next() == true) 
+             {
+            	 return_value = addToConsistOf(playlistId,songid);
+             }
+             else
+             {
+            	 return_value = NOT_EXISTS;
+             }
+             results.close();
+         } catch (SQLException e) {
+             // shouldn't get here....
+             return_value = getErrorValue(e);
+         }
+         finally {
+             try {
+                 pstmt.close();
+             } catch (SQLException e) {
+                 e.printStackTrace();
+             }
+             try {
+                 connection.close();
+             } catch (SQLException e) {
+                 e.printStackTrace();
+             }
+         }
+         
+        return return_value;
     }
 
     public static ReturnValue removeSongFromPlaylist(Integer songid, Integer playlistId)
@@ -661,9 +731,42 @@ public class Solution {
     	if(Integer.valueOf(e.getSQLState()) ==
     			PostgreSQLErrorCodes.FOREIGN_KEY_VIOLATION.getValue())
 		{
-    		return BAD_PARAMS; //???
+    		return BAD_PARAMS; //????
 		}
     	return ERROR;
+    }
+    
+    private static ReturnValue addToConsistOf(Integer playlist_id, Integer song_id)
+    {
+    	Connection connection = DBConnector.getConnection();
+        PreparedStatement pstmt_co = null;
+        ReturnValue return_value = OK;
+        
+        try {
+        	pstmt_co = connection.prepareStatement("INSERT INTO ConsistOf" +
+                        " VALUES (?, ?)");
+        	pstmt_co.setInt(1,playlist_id);
+        	pstmt_co.setInt(2, song_id);
+        	pstmt_co.execute();
+            return_value = OK;
+        } 
+        catch (SQLException e) 
+        {
+            return_value = getErrorValue(e);
+        }
+        finally {
+            try {
+            	pstmt_co.close();
+            } catch (SQLException e) {
+                return_value = ERROR;
+            }
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                return_value = ERROR;
+            }
+        }
+        return return_value;
     }
 }
 

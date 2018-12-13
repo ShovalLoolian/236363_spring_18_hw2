@@ -223,9 +223,17 @@ public class MyTest extends AbstractTest {
         assertEquals(true, temp_playlist.getId() == -1);
         assertEquals(true, temp_playlist.getGenre() == (null));
         assertEquals(true, temp_playlist.getDescription() == (null));
-
+        
+        Playlist updated_playlist = Solution.getPlaylist(1);
+        updated_playlist.setDescription("diff");
+        Solution.updatePlaylist(updated_playlist);
+        temp_playlist = Solution.getPlaylist(1);
+        assertEquals(true, temp_playlist.getId() == 1);
+        assertEquals(true, temp_playlist.getGenre().equals("Pop"));
+        assertEquals(true, temp_playlist.getDescription().equals("diff"));
     }
-
+    
+   
     @Test
     public void deletePlaylistTest() 
     {
@@ -260,6 +268,14 @@ public class MyTest extends AbstractTest {
         assertEquals(OK , res);
         temp_playlist = Solution.getPlaylist(1);
         assertEquals(true, temp_playlist.getId() == -1);
+        res = Solution.addPlaylist(playlist1);
+        assertEquals(OK , res);
+        temp_playlist = Solution.getPlaylist(1);
+        assertEquals(true, temp_playlist.getId() == 1);
+        res = Solution.deletePlaylist(temp_playlist);
+        assertEquals(OK , res);
+        temp_playlist = Solution.getPlaylist(1);
+        assertEquals(true, temp_playlist.getId() == -1);
         
         temp_playlist = Solution.getPlaylist(2);
         assertEquals(true, temp_playlist.getId() == 2);
@@ -282,5 +298,29 @@ public class MyTest extends AbstractTest {
         res = Solution.deletePlaylist(temp2);
         assertEquals(NOT_EXISTS , res);
     }
+
+    @Test
+    public void addSongToPlaylistTest()
+    {
+    	ReturnValue res;
+        Playlist playlist1 = new Playlist();
+        playlist1.setId(1);
+        playlist1.setGenre("Pop");
+        playlist1.setDescription("play1");
+        res = Solution.addPlaylist(playlist1);
+        assertEquals(OK , res);
+        
+        Song song1 = new Song();
+        song1.setId(1);
+        song1.setName("Despacito");
+        song1.setGenre("Pop");
+        song1.setCountry("Spain");
+        res = Solution.addSong(song1);
+        assertEquals(OK, res);
+        
+        res = Solution.addSongToPlaylist(1, 1);
+        assertEquals(OK, res);
+    }
+
 }//End class
 
