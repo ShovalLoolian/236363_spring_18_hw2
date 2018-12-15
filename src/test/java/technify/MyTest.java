@@ -9,8 +9,13 @@ import technify.business.User;
 import static org.junit.Assert.assertEquals;
 import static technify.business.ReturnValue.*;
 
+import java.util.ArrayList;
+
 
 public class MyTest extends AbstractTest {
+	
+	//Cancel other test so it will run faster:
+	/*
     @Test
     public void addUserTest() {
 
@@ -310,6 +315,13 @@ public class MyTest extends AbstractTest {
         res = Solution.addPlaylist(playlist1);
         assertEquals(OK , res);
         
+        Playlist playlist2 = new Playlist();
+        playlist2.setId(2);
+        playlist2.setGenre("Rock");
+        playlist2.setDescription("play2");
+        res = Solution.addPlaylist(playlist2);
+        assertEquals(OK , res);
+        
         Song song1 = new Song();
         song1.setId(1);
         song1.setName("Despacito");
@@ -318,9 +330,302 @@ public class MyTest extends AbstractTest {
         res = Solution.addSong(song1);
         assertEquals(OK, res);
         
+        Song song2 = new Song();
+        song2.setId(2);
+        song2.setName("somename");
+        song2.setGenre("Rock");
+        song2.setCountry("Poland");
+        res = Solution.addSong(song2);
+        assertEquals(OK, res);
+        
         res = Solution.addSongToPlaylist(1, 1);
         assertEquals(OK, res);
+        
+        res = Solution.addSongToPlaylist(2, 2);
+        assertEquals(OK, res);
+        
+        res = Solution.addSongToPlaylist(1, 2);
+        assertEquals(BAD_PARAMS, res);
+        
+        res = Solution.addSongToPlaylist(2, 1);
+        assertEquals(BAD_PARAMS, res);
+        
+        res = Solution.addSongToPlaylist(3, 1);
+        assertEquals(NOT_EXISTS, res);
+        
+        res = Solution.addSongToPlaylist(2, 3);
+        assertEquals(NOT_EXISTS, res);
+        
+        res = Solution.addSongToPlaylist(2, 2);
+        assertEquals(ALREADY_EXISTS, res);
     }
 
+    @Test
+    public void removeSongFromPlaylistTest()
+    {
+    	ReturnValue res;
+        Playlist playlist1 = new Playlist();
+        playlist1.setId(1);
+        playlist1.setGenre("Pop");
+        playlist1.setDescription("play1");
+        res = Solution.addPlaylist(playlist1);
+        assertEquals(OK , res);
+        
+        Playlist playlist2 = new Playlist();
+        playlist2.setId(2);
+        playlist2.setGenre("Rock");
+        playlist2.setDescription("play2");
+        res = Solution.addPlaylist(playlist2);
+        assertEquals(OK , res);
+        
+        Song song1 = new Song();
+        song1.setId(1);
+        song1.setName("Despacito");
+        song1.setGenre("Pop");
+        song1.setCountry("Spain");
+        res = Solution.addSong(song1);
+        assertEquals(OK, res);
+        
+        Song song2 = new Song();
+        song2.setId(2);
+        song2.setName("somename");
+        song2.setGenre("Rock");
+        song2.setCountry("Poland");
+        res = Solution.addSong(song2);
+        assertEquals(OK, res);
+        
+        res = Solution.addSongToPlaylist(1, 1);
+        assertEquals(OK, res);
+        res = Solution.addSongToPlaylist(2, 2);
+        assertEquals(OK, res);
+        res = Solution.addSongToPlaylist(1, 1);
+        assertEquals(ALREADY_EXISTS, res);
+        
+        res = Solution.removeSongFromPlaylist(1, 1);
+        assertEquals(OK, res);
+        res = Solution.addSongToPlaylist(1, 1);
+        assertEquals(OK, res);
+        
+        res = Solution.removeSongFromPlaylist(1, 1);
+        assertEquals(OK, res);
+        res = Solution.removeSongFromPlaylist(1, 2);
+        assertEquals(NOT_EXISTS, res);
+        res = Solution.removeSongFromPlaylist(3, 2);
+        assertEquals(NOT_EXISTS, res);
+        res = Solution.removeSongFromPlaylist(1, 3);
+        assertEquals(NOT_EXISTS, res);
+        res = Solution.removeSongFromPlaylist(3, 6);
+        assertEquals(NOT_EXISTS, res);
+        res = Solution.removeSongFromPlaylist(-1, 2);
+        assertEquals(NOT_EXISTS, res);
+        
+    }
+    
+    @Test
+    public void getPlaylistTotalPlayCountTest()
+    {
+    	//Need SongPlay function to check this test....
+    	ReturnValue res;
+        Playlist playlist1 = new Playlist();
+        playlist1.setId(1);
+        playlist1.setGenre("Pop");
+        playlist1.setDescription("play1");
+        res = Solution.addPlaylist(playlist1);
+        assertEquals(OK , res);
+        
+        Playlist playlist2 = new Playlist();
+        playlist2.setId(2);
+        playlist2.setGenre("Rock");
+        playlist2.setDescription("play2");
+        res = Solution.addPlaylist(playlist2);
+        assertEquals(OK , res);
+        
+        Song song1 = new Song();
+        song1.setId(1);
+        song1.setName("Despacito");
+        song1.setGenre("Pop");
+        song1.setCountry("Spain");
+        res = Solution.addSong(song1);
+        assertEquals(OK, res);
+        Solution.songPlay(1, 10);
+        
+        Song song2 = new Song();
+        song2.setId(2);
+        song2.setName("somename");
+        song2.setGenre("Rock");
+        song2.setCountry("Poland");
+        res = Solution.addSong(song2);
+        assertEquals(OK, res);
+        Solution.songPlay(2, 10);
+        
+        Song song3 = new Song();
+        song3.setId(3);
+        song3.setName("somename2");
+        song3.setGenre("Rock");
+        song3.setCountry("Holand");
+        song3.setPlayCount(20);
+        res = Solution.addSong(song3);
+        assertEquals(OK, res);
+        Solution.songPlay(3, 10);
+        
+        res = Solution.addSongToPlaylist(1, 1);
+        assertEquals(OK, res);
+        res = Solution.addSongToPlaylist(2, 2);
+        assertEquals(OK, res);
+        res = Solution.addSongToPlaylist(3, 2);
+        assertEquals(OK, res);
+        
+        Integer sum1 = Solution.getPlaylistTotalPlayCount(1);
+        assertEquals(true, sum1 == 10);
+        
+        Integer sum2 = Solution.getPlaylistTotalPlayCount(2);
+        assertEquals(true, sum2 == 20);
+    }
+    
+	
+	 @Test
+	    public void getMostPopularSongTest()
+	    {
+		 	ReturnValue res;
+	        Playlist playlist1 = new Playlist();
+	        playlist1.setId(1);
+	        playlist1.setGenre("Pop");
+	        playlist1.setDescription("play1");
+	        res = Solution.addPlaylist(playlist1);
+	        assertEquals(OK , res);
+	        
+	        Playlist playlist2 = new Playlist();
+	        playlist2.setId(2);
+	        playlist2.setGenre("Pop");
+	        playlist2.setDescription("play2");
+	        res = Solution.addPlaylist(playlist2);
+	        assertEquals(OK , res);
+	        
+	        Song song1 = new Song();
+	        song1.setId(1);
+	        song1.setName("song1");
+	        song1.setGenre("Pop");
+	        song1.setCountry("Spain");
+	        res = Solution.addSong(song1);
+	        assertEquals(OK, res);
+	        Solution.songPlay(1, 10);
+	        
+	        Song song2 = new Song();
+	        song2.setId(2);
+	        song2.setName("song2");
+	        song2.setGenre("Pop");
+	        song2.setCountry("Poland");
+	        res = Solution.addSong(song2);
+	        assertEquals(OK, res);
+	        Solution.songPlay(2, 10);
+	        
+	        Song song3 = new Song();
+	        song3.setId(3);
+	        song3.setName("song3");
+	        song3.setGenre("Pop");
+	        song3.setCountry("Holand");
+	        song3.setPlayCount(20);
+	        res = Solution.addSong(song3);
+	        assertEquals(OK, res);
+	        Solution.songPlay(3, 10);
+	        
+	        res = Solution.addSongToPlaylist(1, 1);
+	        assertEquals(OK, res);
+	        res = Solution.addSongToPlaylist(2, 2);
+	        assertEquals(OK, res);
+	        res = Solution.addSongToPlaylist(3, 2);
+	        assertEquals(OK, res);
+	        res = Solution.addSongToPlaylist(2, 1);
+	        assertEquals(OK, res);
+	        res = Solution.addSongToPlaylist(3, 1);
+	        assertEquals(OK, res);
+	        
+	        String mostPopular = Solution.getMostPopularSong();
+	        assertEquals(true, song3.getName().equals(mostPopular));
+	        
+	        Playlist playlist3 = new Playlist();
+	        playlist3.setId(3);
+	        playlist3.setGenre("Pop");
+	        playlist3.setDescription("play3");
+	        res = Solution.addPlaylist(playlist3);
+	        assertEquals(OK , res);
+	        res = Solution.addSongToPlaylist(2, 3);
+	        assertEquals(OK, res);
+	        
+	        mostPopular = Solution.getMostPopularSong();
+	        assertEquals(true, song2.getName().equals(mostPopular));
+	        
+	        res = Solution.addSongToPlaylist(3, 3);
+	        assertEquals(OK, res);
+	        
+	        mostPopular = Solution.getMostPopularSong();
+	        assertEquals(true, song3.getName().equals(mostPopular));
+	    }
+	    
+	    */
+	 
+	 	@Test
+	    public void hottestPlaylistsOnTechnifyTest()
+	    {
+	 		ReturnValue res;
+	        Playlist playlist1 = new Playlist();
+	        playlist1.setId(1);
+	        playlist1.setGenre("Pop");
+	        playlist1.setDescription("play1");
+	        res = Solution.addPlaylist(playlist1);
+	        assertEquals(OK , res);
+	        
+	        Playlist playlist2 = new Playlist();
+	        playlist2.setId(2);
+	        playlist2.setGenre("Pop");
+	        playlist2.setDescription("play2");
+	        res = Solution.addPlaylist(playlist2);
+	        assertEquals(OK , res);
+	        
+	        Song song1 = new Song();
+	        song1.setId(1);
+	        song1.setName("song1");
+	        song1.setGenre("Pop");
+	        song1.setCountry("Spain");
+	        res = Solution.addSong(song1);
+	        assertEquals(OK, res);
+	        Solution.songPlay(1, 10);
+	        
+	        Song song2 = new Song();
+	        song2.setId(2);
+	        song2.setName("song2");
+	        song2.setGenre("Pop");
+	        song2.setCountry("Poland");
+	        res = Solution.addSong(song2);
+	        assertEquals(OK, res);
+	        Solution.songPlay(2, 10);
+	        
+	        Song song3 = new Song();
+	        song3.setId(3);
+	        song3.setName("song3");
+	        song3.setGenre("Pop");
+	        song3.setCountry("Holand");
+	        song3.setPlayCount(20);
+	        res = Solution.addSong(song3);
+	        assertEquals(OK, res);
+	        Solution.songPlay(3, 10);
+	        
+	        res = Solution.addSongToPlaylist(1, 1);
+	        assertEquals(OK, res);
+	        res = Solution.addSongToPlaylist(2, 1);
+	        assertEquals(OK, res);
+	        res = Solution.addSongToPlaylist(3, 1);
+	        assertEquals(OK, res);
+	        res = Solution.addSongToPlaylist(2, 2);
+	        assertEquals(OK, res);
+	        res = Solution.addSongToPlaylist(3, 2);
+	        assertEquals(OK, res);
+	        
+	        ArrayList<Integer> list = Solution.hottestPlaylistsOnTechnify();
+	        assertEquals(true, list.get(0) == 2);
+	        assertEquals(true, list.get(1) == 1);
+	        assertEquals(true, list.size() == 2);
+	        
+	    }
 }//End class
 
