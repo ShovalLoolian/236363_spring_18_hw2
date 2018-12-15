@@ -197,58 +197,52 @@ public class Solution {
 
     public static ReturnValue addUser(User user)
     {
-        if(user.getId() <= 0 || user.getName() == null || user.getCountry() == null /*|| user.getPremium() == null*/) {
-            return BAD_PARAMS;
-        }
-
         Connection connection = DBConnector.getConnection();
-        PreparedStatement pstmt_users = null;
+        PreparedStatement pstmt = null;
         ReturnValue return_value = OK;
 
         try {
-            pstmt_users = connection.prepareStatement("SELECT * FROM Users WHERE user_id = " +
+            pstmt = connection.prepareStatement("SELECT * FROM Users WHERE user_id = " +
                     user.getId());
-            ResultSet results = pstmt_users.executeQuery();
-
-            // check if user already exists
+            ResultSet results = pstmt.executeQuery();
             if(results.next() == true) {
                 return_value = ALREADY_EXISTS;
-
-            // else - add the user
             } else {
-                pstmt_users = connection.prepareStatement("INSERT INTO Users" +
+                pstmt = connection.prepareStatement("INSERT INTO Users" +
                         " VALUES (?, ?, ?, ?)");
-                        pstmt_users.setInt(1,user.getId());
-                        pstmt_users.setString(2, user.getName());
-                        pstmt_users.setString(3,user.getCountry());
-                        pstmt_users.setBoolean(4,user.getPremium());
-                        pstmt_users.execute();
+                pstmt.setInt(1,user.getId());
+                pstmt.setString(2, user.getName());
+                pstmt.setString(3,user.getCountry());
+                pstmt.setBoolean(4,user.getPremium());
+                pstmt.execute();
             }
             results.close();
         } catch (SQLException e) {
-            return_value = ERROR;   // TODO: remove or add in other functions?
+//            e.printStackTrace();
+            return_value = getErrorValue(e);
         }
         finally {
             try {
-                pstmt_users.close();
+                pstmt.close();
             } catch (SQLException e) {
+//                e.printStackTrace();
                 return_value = ERROR;
             }
             try {
                 connection.close();
             } catch (SQLException e) {
+//                e.printStackTrace();
                 return_value = ERROR;
             }
         }
         return return_value;
-
     }
 
     public static User getUserProfile(Integer userId)
     {
         Connection connection = DBConnector.getConnection();
         PreparedStatement pstmt = null;
-        User return_user = new User();
+        User return_user = User.badUser();
 
         try {
             pstmt = connection.prepareStatement("SELECT * FROM Users WHERE user_id = " + userId);
@@ -281,13 +275,50 @@ public class Solution {
 
     public static ReturnValue deleteUser(User user)
     {
-        return null;
+        Connection connection = DBConnector.getConnection();
+        PreparedStatement pstmt1 = null;
+        PreparedStatement pstmt2 = null;
+        ReturnValue return_value = OK;
+
+        if(getUserProfile(user.getId()).equals(User.badUser())) {   //TODO: can I use here the getUserProfile function?
+            return_value =  NOT_EXISTS;
+        } else {
+            try { //TODO: can I do here both?
+                pstmt1 = connection.prepareStatement(
+                        "DELETE FROM Follows " +
+                                "where user_id = ?");
+                pstmt1.setInt(1,user.getId());
+                pstmt1.executeUpdate();
+                pstmt2 = connection.prepareStatement(
+                        "DELETE FROM Users " +
+                                "where user_id = ?");
+                pstmt2.setInt(1,user.getId());
+                pstmt2.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return_value = ERROR;
+            }
+            finally {
+                try {
+                    pstmt1.close();
+                    pstmt2.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return return_value;
     }
 
     public static ReturnValue updateUserPremium(Integer userId)
     {
         User user = getUserProfile(userId);
-        if(user.equals(User.badUser())) {
+        if(user.equals(User.badUser())) {//TODO: change
             return NOT_EXISTS;
         }
         if(user.getPremium() == true) {
@@ -314,11 +345,13 @@ public class Solution {
                 pstmt.close();
             } catch (SQLException e) {
                 e.printStackTrace();
+                return  ERROR;
             }
             try {
                 connection.close();
             } catch (SQLException e) {
                 e.printStackTrace();
+                return  ERROR;
             }
         }
         return OK;
@@ -327,7 +360,7 @@ public class Solution {
     public static ReturnValue updateUserNotPremium(Integer userId)
     {
         User user = getUserProfile(userId);
-        if(user.equals(User.badUser())) {
+        if(user.equals(User.badUser())) { //TODO: change
             return NOT_EXISTS;
         }
         if(user.getPremium() == false) {
@@ -714,6 +747,7 @@ public class Solution {
     }
 
     //========================= Helper Functions =======================================
+
     private static ReturnValue getErrorValue(SQLException e)
     {
     	if(Integer.valueOf(e.getSQLState()) ==

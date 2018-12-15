@@ -12,34 +12,116 @@ import static technify.business.ReturnValue.*;
 
 public class MyTest extends AbstractTest {
     @Test
-    public void addUserTest() {
+    public void userCRUD() {
 
+        // ~addUser
         ReturnValue res;
-        User u = new User();
-        User u2;
-        u.setId(1);
-        u.setName("Monica");
-        u.setCountry("Spain");
-        u.setPremium(false);
+        User badUser = new User();
+        res = Solution.addUser(badUser);
+        assertEquals(BAD_PARAMS, res);
+        badUser.setName("Monica");
+        badUser.setCountry("Spain");
+        // bad ID
+        res = Solution.addUser(badUser);
+        assertEquals(BAD_PARAMS, res);
+        // bad Name
+        badUser.setId(1);
+        badUser.setName(null);
+        res = Solution.addUser(badUser);
+        assertEquals(BAD_PARAMS, res);
+        // bad Country
+        badUser.setName("Monica");
+        badUser.setCountry(null);
+        res = Solution.addUser(badUser);
+        assertEquals(BAD_PARAMS, res);
 
-        res = Solution.addUser(u);
+        User newUser = new User();
+        newUser.setId(1);
+        newUser.setName("Monica");
+        newUser.setCountry("Spain");
+        res = Solution.addUser(newUser);
         assertEquals(OK, res);
-        res = Solution.addUser(u);
+
+        // insert the same user again
+        res = Solution.addUser(newUser);
         assertEquals(ALREADY_EXISTS, res);
-        u2 = Solution.getUserProfile(1);
-        assertEquals(true, u2.equals(u));
-        u2 = Solution.getUserProfile(2);
-        assertEquals(true, u2.equals(new User()));
-        Solution.updateUserPremium(1);
-        u2 = Solution.getUserProfile(1);
-        assertEquals(true, u2.getPremium());
-        Solution.updateUserNotPremium(1);
-        u2 = Solution.getUserProfile(1);
-        assertEquals(false, u2.getPremium());
+        // insert the same ID again
+        User newUser2 = new User();
+        newUser2.setId(1);
+        newUser2.setName("Shahaf");
+        newUser2.setCountry("Israel");
+        res = Solution.addUser(newUser2);
+        assertEquals(ALREADY_EXISTS, res);
+        newUser2.setId(2);
+        res = Solution.addUser(newUser2);
+        assertEquals(OK, res);
+
+        // ~getUserProfile
+        User resUser;
+        // bad ID
+        resUser = Solution.getUserProfile(-1);
+        assertEquals(true, resUser.equals(User.badUser()));
+        // not exist ID
+        resUser = Solution.getUserProfile(3);
+        assertEquals(true, resUser.equals(User.badUser()));
+        // good ID
+        resUser = Solution.getUserProfile(1);
+        assertEquals(true, resUser.equals(newUser));
+
+        // ~deleteUser
+        // not exist
+        res = Solution.deleteUser(User.badUser());
+        assertEquals(NOT_EXISTS, res);
+        User notExistUser = new User();
+        notExistUser.setId(3);
+        notExistUser.setName("Rachel");
+        notExistUser.setCountry("USA");
+        res = Solution.deleteUser(notExistUser);
+        assertEquals(NOT_EXISTS, res);
+        // exist
+        res = Solution.deleteUser(newUser2);
+        assertEquals(OK, res);
+
+        // ~updateUser
+        // not exist
+        res = Solution.updateUserPremium(9);
+        assertEquals(NOT_EXISTS, res);
+        res = Solution.updateUserNotPremium(9);
+        assertEquals(NOT_EXISTS, res);
+        // exist
+        res = Solution.updateUserPremium(1);
+        assertEquals(OK, res);
+        res = Solution.updateUserPremium(1);
+        assertEquals(ALREADY_EXISTS, res);
+        res = Solution.updateUserNotPremium(1);
+        assertEquals(OK, res);
         res = Solution.updateUserNotPremium(1);
         assertEquals(ALREADY_EXISTS, res);
-        res = Solution.updateUserNotPremium(110);
-        assertEquals(NOT_EXISTS, res);
+
+//        User u2;
+//        u.setId(1);
+//        u.setName("Monica");
+//        u.setCountry("Spain");
+//        u.setPremium(false);
+//
+//        res = Solution.addUser(u);
+//        assertEquals(OK, res);
+//        res = Solution.addUser(u);
+//        assertEquals(ALREADY_EXISTS, res);
+//        u2 = Solution.getUserProfile(1);
+//        assertEquals(true, u2.equals(u));
+//        u2 = Solution.getUserProfile(2);
+//        assertEquals(true, u2.equals(new User()));
+//        Solution.updateUserPremium(1);
+//        u2 = Solution.getUserProfile(1);
+//        assertEquals(true, u2.getPremium());
+//        Solution.updateUserNotPremium(1);
+//        u2 = Solution.getUserProfile(1);
+//        assertEquals(false, u2.getPremium());
+//        res = Solution.updateUserNotPremium(1);
+//        assertEquals(ALREADY_EXISTS, res);
+//        res = Solution.updateUserNotPremium(110);
+//        assertEquals(NOT_EXISTS, res);
 
     }
     @Test
