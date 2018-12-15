@@ -41,7 +41,7 @@ public class Solution {
                     "    song_name text NOT NULL,\n" +
                     "    genre text NOT NULL,\n" +
                     "    country text ,\n" +
-                    "    play_count integer ,\n" +
+                    "    play_count integer default 0,\n" +
                     "    PRIMARY KEY (song_id),\n" +
                     "    CHECK (song_id > 0),\n" +
                     "    CHECK (play_count >= 0)\n" +
@@ -589,10 +589,6 @@ public class Solution {
     public static ReturnValue deletePlaylist(Playlist playlist)
     {
 			//TODO: NIV
-			if(playlist == null)
-			{
-				return BAD_PARAMS;
-			}
     	   Connection connection = DBConnector.getConnection();
            PreparedStatement pstmt = null;
            ReturnValue return_value = OK;
@@ -628,7 +624,6 @@ public class Solution {
     public static ReturnValue updatePlaylist(Playlist playlist)
     {
     	//TODO: NIV
-    	//check if playlist is null?
     	 Connection connection = DBConnector.getConnection();
          PreparedStatement pstmt = null;
          ReturnValue return_value = OK;
@@ -670,6 +665,8 @@ public class Solution {
     	//TODO: NIV
     	 Connection connection = DBConnector.getConnection();
          PreparedStatement pstmt = null;
+         PreparedStatement pstmt_playlist = null;
+         PreparedStatement pstmt_song = null;
          ReturnValue return_value = OK;
          
          String queryForPlaylist = "SELECT * FROM Playlists WHERE playlist_id = "+ playlistId
@@ -684,7 +681,17 @@ public class Solution {
              }
              else
              {
-            	 return_value = NOT_EXISTS;
+            	 //need to check why it's false 
+            	 pstmt_playlist = connection.prepareStatement("SELECT * FROM Playlists WHERE "
+            	 		+ "playlist_id = "+ playlistId);
+            	 pstmt_song = connection.prepareStatement("SELECT * FROM Songs WHERE "
+             	 		+ "song_id = "+ songid);
+            	 ResultSet results_playlist = pstmt_playlist.executeQuery();
+            	 ResultSet results_song = pstmt_song.executeQuery();
+            	 if(results_playlist.next() != true || results_song.next() != true)
+            		 return_value = NOT_EXISTS;
+            	 else
+            		 return_value = BAD_PARAMS;
              }
              results.close();
          } catch (SQLException e) {
@@ -694,6 +701,8 @@ public class Solution {
          finally {
              try {
                  pstmt.close();
+                 if(pstmt_playlist != null) pstmt_playlist.close();
+                 if(pstmt_song != null) pstmt_song.close();
              } catch (SQLException e) {
                  e.printStackTrace();
              }
@@ -710,7 +719,38 @@ public class Solution {
     public static ReturnValue removeSongFromPlaylist(Integer songid, Integer playlistId)
     {
     	//TODO: NIV
-        return null;
+    	  Connection connection = DBConnector.getConnection();
+          PreparedStatement pstmt = null;
+          ReturnValue return_value = OK;
+          try {
+              pstmt = connection.prepareStatement(
+                      "DELETE FROM consistOf " +
+                              "where playlist_id = ?"
+                              + "AND song_id = ?");
+              pstmt.setInt(1,playlistId);
+              pstmt.setInt(2,songid);
+              int affectedRows = pstmt.executeUpdate();
+              if(affectedRows > 0)
+           	   return_value = OK;
+              else
+           	   return_value = NOT_EXISTS;
+          } catch (SQLException e) {
+              //e.printStackTrace()();
+       	   return_value = getErrorValue(e);
+          }
+          finally {
+              try {
+                  pstmt.close();
+              } catch (SQLException e) {
+                  //e.printStackTrace()();
+              }
+              try {
+                  connection.close();
+              } catch (SQLException e) {
+                  //e.printStackTrace()();
+              }
+          }
+       return return_value;
     }
 
     public static ReturnValue followPlaylist(Integer userId, Integer playlistId){
@@ -839,7 +879,38 @@ public class Solution {
     public static Integer getPlaylistTotalPlayCount(Integer playlistId)
     {
     	//TODO: NIV
-        return null;
+    	String queryForPlaylist = "SELECT SUM(play_count) FROM Songs WHERE song_id IN "
+    			+ "(SELECT song_id FROM consistOf WHERE playlist_id = "+playlistId+")";
+    	
+   	 	Connection connection = DBConnector.getConnection();
+        PreparedStatement pstmt = null;
+        Integer return_value = 0;
+        try {
+            pstmt = connection.prepareStatement(queryForPlaylist);
+            ResultSet results = pstmt.executeQuery();
+            if(results.next() == true) 
+            {
+            	return_value = results.getInt("sum");
+            }
+        } catch (SQLException e) {
+            //e.printStackTrace()();
+       	 	return_value = 0;
+        }
+        finally {
+            try {
+                pstmt.close();
+            } catch (SQLException e) {
+                //e.printStackTrace()();
+           	 return_value = 0;
+            }
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                //e.printStackTrace()();
+           	 return_value = 0;
+            }
+        }
+       return return_value;
     }
 
     public static Integer getPlaylistFollowersCount(Integer playlistId){
@@ -849,7 +920,48 @@ public class Solution {
     public static String getMostPopularSong()
     {
     	//TODO: NIV
-        return null;
+    	String playlistsAreEmpty = "No songs";
+    	String return_value = playlistsAreEmpty;
+    	String queryForPlaylist = "SELECT song_id, COUNT(song_id) FROM consistOf GROUP BY song_id"
+    			+ " ORDER BY COUNT(song_id) DESC, song_id DESC";
+    	
+   	 	Connection connection = DBConnector.getConnection();
+        PreparedStatement pstmt = null;
+        
+        int biggest_song_id = -1;
+        
+        try {
+            pstmt = connection.prepareStatement(queryForPlaylist);
+            ResultSet results = pstmt.executeQuery();
+            if(results.next() == true) 
+            {
+            	biggest_song_id = results.getInt("song_id");
+            	return_value = (getSong(biggest_song_id)).getName();
+            }
+            else
+            {
+            	return_value = playlistsAreEmpty;
+            }
+        } catch (SQLException e) {
+            //e.printStackTrace()();
+       	 	return_value = null;
+        }
+        finally {
+            try {
+                pstmt.close();
+            } catch (SQLException e) {
+                //e.printStackTrace()();
+           	 return_value = null;
+            }
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                //e.printStackTrace()();
+           	 return_value = null;
+            }
+        }
+        
+        return return_value;
     }
 
     public static Integer getMostPopularPlaylist(){
@@ -858,8 +970,43 @@ public class Solution {
 
     public static ArrayList<Integer> hottestPlaylistsOnTechnify()
     {
-    	//TODO: NIV
-        return null;
+    	//TODO: NIV			
+    	String queryForPlaylist = "SELECT playlist_id, AVG(play_count) FROM Songs RIGHT OUTER JOIN consistOf ON"
+    			+ "(Songs.song_id = consistOf.song_id) GROUP BY playlist_id"
+    			+ " ORDER BY AVG(play_count) DESC, playlist_id DESC limit 10";
+    					
+    	ArrayList<Integer> playlistIds = new ArrayList<Integer>();
+    	
+   	 	Connection connection = DBConnector.getConnection();
+        PreparedStatement pstmt = null;
+        
+        try {
+            pstmt = connection.prepareStatement(queryForPlaylist);
+            ResultSet results = pstmt.executeQuery();
+            while(results.next() == true) 
+            {
+            	playlistIds.add(results.getInt("playlist_id"));
+            }
+        } catch (SQLException e) {
+            //e.printStackTrace()();
+       	 	
+        }
+        finally {
+            try {
+                pstmt.close();
+            } catch (SQLException e) {
+                //e.printStackTrace()();
+           	 
+            }
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                //e.printStackTrace()();
+           	
+            }
+        }
+
+        return playlistIds;
     }
 
     public static ArrayList<Integer> getSimilarUsers(Integer userId){
