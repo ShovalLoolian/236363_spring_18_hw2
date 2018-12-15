@@ -97,74 +97,123 @@ public class MyTest extends AbstractTest {
         assertEquals(OK, res);
         res = Solution.updateUserNotPremium(1);
         assertEquals(ALREADY_EXISTS, res);
-
-//        User u2;
-//        u.setId(1);
-//        u.setName("Monica");
-//        u.setCountry("Spain");
-//        u.setPremium(false);
-//
-//        res = Solution.addUser(u);
-//        assertEquals(OK, res);
-//        res = Solution.addUser(u);
-//        assertEquals(ALREADY_EXISTS, res);
-//        u2 = Solution.getUserProfile(1);
-//        assertEquals(true, u2.equals(u));
-//        u2 = Solution.getUserProfile(2);
-//        assertEquals(true, u2.equals(new User()));
-//        Solution.updateUserPremium(1);
-//        u2 = Solution.getUserProfile(1);
-//        assertEquals(true, u2.getPremium());
-//        Solution.updateUserNotPremium(1);
-//        u2 = Solution.getUserProfile(1);
-//        assertEquals(false, u2.getPremium());
-//        res = Solution.updateUserNotPremium(1);
-//        assertEquals(ALREADY_EXISTS, res);
-//        res = Solution.updateUserNotPremium(110);
-//        assertEquals(NOT_EXISTS, res);
-
     }
+
     @Test
-    public void addSongTest() {
+    public void songCRUD() {
 
+        // ~addSong
         ReturnValue res;
-        Song s = new Song();
-        s.setId(1);
-        s.setName("Despacito");
-        s.setGenre("Latin");
-        s.setCountry("Spain");
+        Song badSong= Song.badSong();
+        res = Solution.addSong(badSong);
+        assertEquals(BAD_PARAMS, res);
+        badSong.setName("Toy");
+        badSong.setGenre("Pop");
+        badSong.setCountry("Israel");
+        // bad ID
+        res = Solution.addSong(badSong);
+        assertEquals(BAD_PARAMS, res);
+        // bad Name
+        badSong.setId(1);
+        badSong.setName(null);
+        res = Solution.addSong(badSong);
+        assertEquals(BAD_PARAMS, res);
+        // bad Genre
+        badSong.setName("Toy");
+        badSong.setGenre(null);
+        res = Solution.addSong(badSong);
+        assertEquals(BAD_PARAMS, res);
+        // bad Country
+        badSong.setName("Toy");
+        badSong.setCountry(null);
+        res = Solution.addSong(badSong);
+        assertEquals(BAD_PARAMS, res);
 
-        res = Solution.addSong(s);
+        Song newSong = new Song();
+        newSong.setId(1);
+        newSong.setName("Toy");
+        newSong.setGenre("Pop");
+        newSong.setCountry("Israel");
+        res = Solution.addSong(newSong);
         assertEquals(OK, res);
 
-        res = Solution.addSong(s);
+        // insert the same song again
+        res = Solution.addSong(newSong);
         assertEquals(ALREADY_EXISTS, res);
-
-        Song s2 = new Song();
-        s2.setId(-1);
-        s2.setName("Despacito");
-        s2.setGenre("Latin");
-        s2.setCountry("Spain");
-
-        res = Solution.addSong(s2);
-        assertEquals(BAD_PARAMS, res);
-
-        s2.setId(2);
-        s2.setGenre(null);
-
-        res = Solution.addSong(s2);
-        assertEquals(BAD_PARAMS, res);
-
-        s2.setGenre("Latinos");
-
-        res = Solution.addSong(s2);
+        // insert the same ID again
+        Song newSong2 = new Song();
+        newSong2.setId(1);
+        newSong2.setName("Despacito");
+        newSong2.setGenre("Latin");
+        newSong2.setCountry("Spain");
+        res = Solution.addSong(newSong2);
+        assertEquals(ALREADY_EXISTS, res);
+        newSong2.setId(2);
+        res = Solution.addSong(newSong2);
         assertEquals(OK, res);
 
-        Song s_by_id = Solution.getSong(1);
-        assertEquals(true, s_by_id.equals(s));
+        // ~getSong
+        Song resSong;
+        // bad ID
+        resSong = Solution.getSong(-1);
+        assertEquals(true, resSong.equals(Song.badSong()));
+        // not exist ID
+        resSong = Solution.getSong(3);
+        assertEquals(true, resSong.equals(Song.badSong()));
+        // good ID
+        resSong = Solution.getSong(1);
+        assertEquals(true, resSong.equals(newSong));
+        resSong = Solution.getSong(2);
+        assertEquals(true, resSong.equals(newSong2));
 
-        Song s_by_id2 = Solution.getSong(30);
-        assertEquals(true, s_by_id2.equals(new Song()));
+
+
+        // ~updateSongName
+        res = Solution.updateSongName(Song.badSong());
+        assertEquals(NOT_EXISTS, res);
+        newSong2.setName(null);
+        res = Solution.updateSongName(newSong2);
+        assertEquals(BAD_PARAMS, res);
+        newSong2.setName("Echame La Culpa");
+        res = Solution.updateSongName(newSong2);
+        assertEquals(OK, res);
+
+//        s.setId(1);
+//        s.setName("Despacito");
+//        s.setGenre("Latin");
+//        s.setCountry("Spain");
+//
+//        res = Solution.addSong(s);
+//        assertEquals(OK, res);
+//
+//        res = Solution.addSong(s);
+//        assertEquals(ALREADY_EXISTS, res);
+//
+//        Song s2 = new Song();
+//        s2.setId(-1);
+//        s2.setName("Despacito");
+//        s2.setGenre("Latin");
+//        s2.setCountry("Spain");
+//
+//        res = Solution.addSong(s2);
+//        assertEquals(BAD_PARAMS, res);
+//
+//        s2.setId(2);
+//        s2.setGenre(null);
+//
+//        res = Solution.addSong(s2);
+//        assertEquals(BAD_PARAMS, res);
+//
+//        s2.setGenre("Latinos");
+//
+//        res = Solution.addSong(s2);
+//        assertEquals(OK, res);
+//
+//        Song s_by_id = Solution.getSong(1);
+//        assertEquals(true, s_by_id.equals(s));
+//
+//        Song s_by_id2 = Solution.getSong(30);
+//        assertEquals(true, s_by_id2.equals(new Song()));
 
 //        res = Solution.songPlay(1, 1);
 //        assertEquals(OK, res);
@@ -402,6 +451,67 @@ public class MyTest extends AbstractTest {
         
         res = Solution.addSongToPlaylist(1, 1);
         assertEquals(OK, res);
+    }
+
+    @Test
+    public void songPlayTest()
+    {
+        ReturnValue res;
+        Song newSong = new Song();
+        newSong.setId(1);
+        newSong.setName("Toy");
+        newSong.setGenre("Pop");
+        newSong.setCountry("Israel");
+        res = Solution.addSong(newSong);
+        assertEquals(OK, res);
+        res = Solution.songPlay(1, 5);
+        assertEquals(OK, res);
+        res = Solution.songPlay(-1, 5);
+        assertEquals(NOT_EXISTS, res);
+        res = Solution.songPlay(1, -6);
+        assertEquals(BAD_PARAMS, res);
+        res = Solution.songPlay(1, -2);
+        assertEquals(OK, res);
+        res = Solution.songPlay(2, 5);
+        assertEquals(NOT_EXISTS, res);
+    }
+
+    @Test
+    public void followPlaylistTest()
+    {
+        ReturnValue res;
+        User user = new User();
+        user.setId(1);
+        user.setName("Monica");
+        user.setCountry("Spain");
+
+        Playlist playlist = new Playlist();
+        playlist.setId(2);
+        playlist.setGenre("Latin");
+        playlist.setDescription("Latin songs");
+
+        res = Solution.followPlaylist(1, 2);
+        assertEquals(NOT_EXISTS, res);
+        Solution.addUser(user);
+        res = Solution.followPlaylist(1, 2);
+        assertEquals(NOT_EXISTS, res);
+
+        Solution.addPlaylist(playlist);
+        res = Solution.followPlaylist(1, 2);
+        assertEquals(OK, res);
+
+        res = Solution.followPlaylist(1, 2);
+        assertEquals(ALREADY_EXISTS, res);
+
+        // stop follow
+        res = Solution.stopFollowPlaylist(1, 3);
+        assertEquals(NOT_EXISTS, res);
+        res = Solution.stopFollowPlaylist(3, 2);
+        assertEquals(NOT_EXISTS, res);
+        res = Solution.stopFollowPlaylist(1, 2);
+        assertEquals(OK, res);
+        res = Solution.stopFollowPlaylist(1, 2);
+        assertEquals(NOT_EXISTS, res);
     }
 
 }//End class

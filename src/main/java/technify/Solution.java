@@ -398,24 +398,15 @@ public class Solution {
 
     public static ReturnValue addSong(Song song)
     {
-        if(song.getId() <= 0 || song.getName() == null || song.getGenre() == null) {
-            return BAD_PARAMS;
-        }
-
         Connection connection = DBConnector.getConnection();
         PreparedStatement pstmt_songs = null;
         ReturnValue return_value = OK;
 
         try {
-            pstmt_songs = connection.prepareStatement("SELECT * FROM Songs WHERE song_id = " +
-                    song.getId());
+            pstmt_songs = connection.prepareStatement("SELECT * FROM Songs WHERE song_id = " + song.getId());
             ResultSet results = pstmt_songs.executeQuery();
-
-            // check if song already exists
             if(results.next() == true) {
                 return_value = ALREADY_EXISTS;
-
-                // else - add the song
             } else {
                 pstmt_songs = connection.prepareStatement("INSERT INTO Songs" +
                         " VALUES (?, ?, ?, ?, ?)");
@@ -428,7 +419,7 @@ public class Solution {
             }
             results.close();
         } catch (SQLException e) {
-            return_value = ERROR;   // TODO: remove or add in other functions?
+            return_value = getErrorValue(e);
         }
         finally {
             try {
@@ -449,7 +440,7 @@ public class Solution {
     {
         Connection connection = DBConnector.getConnection();
         PreparedStatement pstmt = null;
-        Song return_song = new Song();
+        Song return_song = Song.badSong();
 
         try {
             pstmt = connection.prepareStatement("SELECT * FROM Songs WHERE song_id = " + songId);
@@ -488,7 +479,41 @@ public class Solution {
 
     public static ReturnValue updateSongName(Song song)
     {
-        return null;
+        Connection connection = DBConnector.getConnection();
+        PreparedStatement pstmt = null;
+        ReturnValue return_value = OK;
+
+        if(getSong(song.getId()).equals(Song.badSong())) {
+            return_value = NOT_EXISTS;
+        } else {
+            try {
+                pstmt = connection.prepareStatement(
+                        "UPDATE Songs " +
+                                "SET song_name = ? " +
+                                "where song_id = ?");
+                pstmt.setString(1, song.getName());
+                pstmt.setInt(2, song.getId());
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                return_value = getErrorValue(e);
+                //e.printStackTrace()();
+            }
+            finally {
+                try {
+                    pstmt.close();
+                } catch (SQLException e) {
+                    return_value = ERROR;
+                    //e.printStackTrace()();
+                }
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    return_value = ERROR;
+                    //e.printStackTrace()();
+                }
+            }
+        }
+        return return_value;
     }
 
     public static ReturnValue addPlaylist(Playlist playlist)
@@ -689,15 +714,126 @@ public class Solution {
     }
 
     public static ReturnValue followPlaylist(Integer userId, Integer playlistId){
-        return null;
+        Connection connection = DBConnector.getConnection();
+        PreparedStatement pstmt = null;
+        ReturnValue return_value = OK;
+
+        if(getUserProfile(userId).equals(User.badUser()) || getPlaylist(playlistId).equals(Playlist.badPlaylist())) {
+            return_value = NOT_EXISTS;
+        } else {
+            try {
+                pstmt = connection.prepareStatement("INSERT INTO Follows" +
+                        " VALUES (?, ?)");
+                pstmt.setInt(1, userId);
+                pstmt.setInt(2, playlistId);
+                pstmt.execute();
+
+            } catch (SQLException e) {
+                if(Integer.valueOf(e.getSQLState()) == PostgreSQLErrorCodes.UNIQUE_VIOLATION.getValue()) {
+                    return_value = ALREADY_EXISTS;
+                } else {
+                    return_value = ERROR;
+                }
+                //e.printStackTrace()();
+            }
+            finally {
+                try {
+                    pstmt.close();
+                } catch (SQLException e) {
+                    return_value = ERROR;
+                    //e.printStackTrace()();
+                }
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    return_value = ERROR;
+                    //e.printStackTrace()();
+                }
+            }
+        }
+        return return_value;
     }
 
     public static ReturnValue stopFollowPlaylist(Integer userId, Integer playlistId){
-        return null;
+        Connection connection = DBConnector.getConnection();
+        PreparedStatement pstmt = null;
+        ReturnValue return_value = OK;
+
+        if(getUserProfile(userId).equals(User.badUser()) || getPlaylist(playlistId).equals(Playlist.badPlaylist())) {
+            return_value = NOT_EXISTS;
+        } else {
+            try {
+                pstmt = connection.prepareStatement(
+                        "DELETE FROM Follows " +
+                                "where user_id = ? AND playlist_id = ?");
+                pstmt.setInt(1, userId);
+                pstmt.setInt(2, playlistId);
+                int affectedRows = pstmt.executeUpdate();
+                if(affectedRows == 0) {
+                    return_value = NOT_EXISTS;
+                }
+            } catch (SQLException e) {
+                return_value = ERROR;
+                //e.printStackTrace()();
+            }
+            finally {
+                try {
+                    pstmt.close();
+                } catch (SQLException e) {
+                    return_value = ERROR;
+                    //e.printStackTrace()();
+                }
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    return_value = ERROR;
+                    //e.printStackTrace()();
+                }
+            }
+        }
+        return return_value;
     }
 
     public static ReturnValue songPlay(Integer songId, Integer times){
-        return null;
+        Connection connection = DBConnector.getConnection();
+        PreparedStatement pstmt = null;
+        ReturnValue return_value = OK;
+        try {
+            pstmt = connection.prepareStatement(
+                    "UPDATE Songs SET play_count = ? + (SELECT play_count FROM Songs WHERE song_id = ?)" +
+                            "where song_id = ?");
+            pstmt.setInt(1, times);
+            pstmt.setInt(2, songId);
+            pstmt.setInt(3, songId);
+            int affectedRows = pstmt.executeUpdate();
+            if(affectedRows == 0) {
+                return_value = NOT_EXISTS;
+            }
+        } catch (SQLException e) {
+//            return_value = getErrorValueSongPlay(e);
+            if(Integer.valueOf(e.getSQLState()) == PostgreSQLErrorCodes.CHECK_VIOLATION.getValue())
+            {
+                return_value = BAD_PARAMS;
+            } else {
+                return_value = ERROR;
+            }
+            //e.printStackTrace()();
+        }
+        finally {
+            try {
+                pstmt.close();
+            } catch (SQLException e) {
+                return_value = ERROR;
+                //e.printStackTrace()();
+            }
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                return_value = ERROR;
+                //e.printStackTrace()();
+            }
+        }
+        return return_value;
     }
 
     public static Integer getPlaylistTotalPlayCount(Integer playlistId)
@@ -769,6 +905,15 @@ public class Solution {
 		}
     	return ERROR;
     }
+
+//    private static ReturnValue getErrorValueSongPlay(SQLException e)
+//    {
+//        if(Integer.valueOf(e.getSQLState()) == PostgreSQLErrorCodes.CHECK_VIOLATION.getValue())
+//        {
+//            return BAD_PARAMS;
+//        }
+//        return ERROR;
+//    }
     
     private static ReturnValue addToConsistOf(Integer playlist_id, Integer song_id)
     {
