@@ -21,7 +21,7 @@ public class Solution {
         PreparedStatement pstmt_songs = null;
         PreparedStatement pstmt_playlists = null;
         PreparedStatement pstmt_follows = null;
-        PreparedStatement pstmt_consistOf = null;
+        PreparedStatement pstmt_consistOf = null;//
 
         try {
             pstmt_users = connection.prepareStatement("CREATE TABLE Users\n" +
