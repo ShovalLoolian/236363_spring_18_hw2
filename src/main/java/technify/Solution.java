@@ -63,7 +63,8 @@ public class Solution {
                     "    user_id integer,\n" +
                     "    playlist_id integer ,\n" +
                     "    PRIMARY KEY (user_id, playlist_id),\n" +
-                    "    FOREIGN KEY (playlist_id) REFERENCES Playlists (playlist_id)\n" +
+                    "    FOREIGN KEY (playlist_id) REFERENCES Playlists (playlist_id),\n" +
+                    "    FOREIGN KEY (user_id) REFERENCES Users (user_id)\n" +
                     ")");
             pstmt_follows.execute();
 
@@ -72,7 +73,8 @@ public class Solution {
                     "    playlist_id integer,\n" +
                     "    song_id integer ,\n" +
                     "    PRIMARY KEY (playlist_id, song_id),\n" +
-                    "    FOREIGN KEY (song_id) REFERENCES Songs (song_id)\n" +
+                    "    FOREIGN KEY (song_id) REFERENCES Songs (song_id),\n" +
+                    "    FOREIGN KEY (playlist_id) REFERENCES Playlists (playlist_id)\n" +
                     ")");
             pstmt_consistOf.execute();
 
