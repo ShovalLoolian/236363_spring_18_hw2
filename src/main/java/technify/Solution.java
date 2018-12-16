@@ -1026,7 +1026,44 @@ public class Solution {
     public static ArrayList<Integer> getSongsRecommendationByGenre(Integer userId, String genre)
     {
     	//TODO: NIV
-        return null;
+    	Connection connection = DBConnector.getConnection();
+        PreparedStatement pstmt = null;
+        
+        String chooseAllPlaylistIdOfUserId = "SELECT consistOf.playlist_id FROM consistOf INNER JOIN follows ON "
+        		+ "(consistOf.playlist_id = follows.playlist_id) WHERE user_id = " + userId;
+        
+       String songsThatNotInPlaylistIdByGenre = "SELECT Songs.song_id FROM Songs LEFT OUTER JOIN consistOf ON " 
+        		    	+ "(Songs.song_id = consistOf.song_id) WHERE (playlist_id NOT IN ("
+        		    	+chooseAllPlaylistIdOfUserId+") OR playlist_id is NULL) AND (genre = '"+genre+"')";
+        
+       String SongsRecommendationByGenre =	songsThatNotInPlaylistIdByGenre+ " ORDER BY play_count DESC,"
+       		+ " song_id DESC limit 10";
+        
+       ArrayList<Integer> songsIds = new ArrayList<Integer>();
+        try {
+            pstmt = connection.prepareStatement(SongsRecommendationByGenre);
+            ResultSet results = pstmt.executeQuery();
+            while(results.next() == true) 
+            {
+            	songsIds.add(results.getInt("song_id"));
+            }
+            results.close();
+        } catch (SQLException e) {
+        	
+        }
+        finally {
+            try {
+                pstmt.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return songsIds;
     }
 
     //========================= Helper Functions =======================================
