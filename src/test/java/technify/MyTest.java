@@ -6,6 +6,8 @@ import technify.business.ReturnValue;
 import technify.business.Song;
 import technify.business.User;
 
+import java.util.ArrayList;
+
 import static org.junit.Assert.assertEquals;
 import static technify.business.ReturnValue.*;
 
@@ -81,6 +83,8 @@ public class MyTest extends AbstractTest {
         // exist
         res = Solution.deleteUser(newUser2);
         assertEquals(OK, res);
+        resUser = Solution.getUserProfile(2);
+        assertEquals(true, resUser.equals(User.badUser()));
 
         // ~updateUser
         // not exist
@@ -166,6 +170,22 @@ public class MyTest extends AbstractTest {
         resSong = Solution.getSong(2);
         assertEquals(true, resSong.equals(newSong2));
 
+        // ~deleteSong
+        // not exist
+        res = Solution.deleteSong(Song.badSong());
+        assertEquals(NOT_EXISTS, res);
+        Song notExistSong = new Song();
+        notExistSong.setId(3);
+        notExistSong.setName("Despacito");
+        notExistSong.setGenre("Latin");
+        notExistSong.setCountry("Spain");
+        res = Solution.deleteSong(notExistSong);
+        assertEquals(NOT_EXISTS, res);
+        // exist
+        res = Solution.deleteSong(newSong);
+        assertEquals(OK, res);
+        resSong = Solution.getSong(1);
+        assertEquals(true, resSong.equals(Song.badSong()));
 
 
         // ~updateSongName
@@ -177,49 +197,6 @@ public class MyTest extends AbstractTest {
         newSong2.setName("Echame La Culpa");
         res = Solution.updateSongName(newSong2);
         assertEquals(OK, res);
-
-//        s.setId(1);
-//        s.setName("Despacito");
-//        s.setGenre("Latin");
-//        s.setCountry("Spain");
-//
-//        res = Solution.addSong(s);
-//        assertEquals(OK, res);
-//
-//        res = Solution.addSong(s);
-//        assertEquals(ALREADY_EXISTS, res);
-//
-//        Song s2 = new Song();
-//        s2.setId(-1);
-//        s2.setName("Despacito");
-//        s2.setGenre("Latin");
-//        s2.setCountry("Spain");
-//
-//        res = Solution.addSong(s2);
-//        assertEquals(BAD_PARAMS, res);
-//
-//        s2.setId(2);
-//        s2.setGenre(null);
-//
-//        res = Solution.addSong(s2);
-//        assertEquals(BAD_PARAMS, res);
-//
-//        s2.setGenre("Latinos");
-//
-//        res = Solution.addSong(s2);
-//        assertEquals(OK, res);
-//
-//        Song s_by_id = Solution.getSong(1);
-//        assertEquals(true, s_by_id.equals(s));
-//
-//        Song s_by_id2 = Solution.getSong(30);
-//        assertEquals(true, s_by_id2.equals(new Song()));
-
-//        res = Solution.songPlay(1, 1);
-//        assertEquals(OK, res);
-//
-//        res = Solution.songPlay(1, -3);
-//        assertEquals(BAD_PARAMS, res);
     }
 //
 //    @Test
@@ -512,6 +489,169 @@ public class MyTest extends AbstractTest {
         assertEquals(OK, res);
         res = Solution.stopFollowPlaylist(1, 2);
         assertEquals(NOT_EXISTS, res);
+    }
+
+    @Test
+    public void getPlaylistFollowersCountTest()
+    {
+        // follow playlist
+        int res;
+        User user = new User();
+        user.setId(1);
+        user.setName("Monica");
+        user.setCountry("Spain");
+
+        Playlist playlist = new Playlist();
+        playlist.setId(2);
+        playlist.setGenre("Latin");
+        playlist.setDescription("Latin songs");
+
+        Solution.addUser(user);
+        Solution.addPlaylist(playlist);
+
+        res = Solution.getPlaylistFollowersCount(2);
+        assertEquals(0, res);
+        Solution.followPlaylist(1, 2);
+
+        res = Solution.getPlaylistFollowersCount(2);
+        assertEquals(1, res);
+
+        User user2 = new User();
+        user2.setId(2);
+        user2.setName("Jennifer");
+        user2.setCountry("UK");
+        Playlist playlist2 = new Playlist();
+        playlist2.setId(3);
+        playlist2.setGenre("Pop");
+        playlist2.setDescription("Pop songs");
+        Solution.addUser(user2);
+        Solution.addPlaylist(playlist2);
+
+        res = Solution.getPlaylistFollowersCount(2);
+        assertEquals(1, res);
+        res = Solution.getPlaylistFollowersCount(3);
+        assertEquals(0, res);
+
+        Solution.followPlaylist(2, 2);
+        Solution.followPlaylist(2, 3);
+        res = Solution.getPlaylistFollowersCount(2);
+        assertEquals(2, res);
+        res = Solution.getPlaylistFollowersCount(3);
+        assertEquals(1, res);
+    }
+
+    @Test
+    public void getMostPopularPlaylistTest()
+    {
+        int res;
+
+        Playlist playlist1 = new Playlist();
+        playlist1.setId(1);
+        playlist1.setGenre("Pop");
+        playlist1.setDescription("Pop songs");
+
+        Playlist playlist2 = new Playlist();
+        playlist2.setId(2);
+        playlist2.setGenre("Latin");
+        playlist2.setDescription("Latin songs");
+
+        Solution.addPlaylist(playlist1);
+        Solution.addPlaylist(playlist2);
+
+        Song song11 = new Song();
+        song11.setId(11);
+        song11.setName("Toy");
+        song11.setGenre("Pop");
+        song11.setCountry("Israel");
+
+        Song song21 = new Song();
+        song21.setId(21);
+        song21.setName("Despacito");
+        song21.setGenre("Latin");
+        song21.setCountry("Spain");
+
+        Song song22 = new Song();
+        song22.setId(22);
+        song22.setName("Baby");
+        song22.setGenre("Latin");
+        song22.setCountry("USA");
+
+        Solution.addSong(song11);
+        Solution.addSong(song21);
+        Solution.addSong(song22);
+
+        Solution.addSongToPlaylist(11,1);
+        Solution.addSongToPlaylist(21,2);
+        Solution.addSongToPlaylist(22,2);
+
+        Solution.songPlay(11, 100);
+        Solution.songPlay(21, 65);
+        Solution.songPlay(22, 45);
+
+
+        res = Solution.getMostPopularPlaylist();
+        assertEquals(2, res);
+
+    }
+
+    @Test
+    public void getSimilarUsersTest()
+    {
+        ArrayList<Integer> res;
+
+        Playlist playlist1 = new Playlist();
+        playlist1.setId(1);
+        playlist1.setGenre("Pop");
+        playlist1.setDescription("Pop songs");
+
+        Playlist playlist2 = new Playlist();
+        playlist2.setId(2);
+        playlist2.setGenre("Latin");
+        playlist2.setDescription("Latin songs");
+
+        Playlist playlist3 = new Playlist();
+        playlist2.setId(3);
+        playlist2.setGenre("Rock");
+        playlist2.setDescription("Rock songs");
+
+        Solution.addPlaylist(playlist1);
+        Solution.addPlaylist(playlist2);
+//        Solution.addPlaylist(playlist3);
+
+        User user11 = new User();
+        user11.setId(11);
+        user11.setName("Monica");
+        user11.setCountry("Spain");
+
+        User user12 = new User();
+        user12.setId(12);
+        user12.setName("Neta");
+        user12.setCountry("Israel");
+
+        User user13 = new User();
+        user13.setId(13);
+        user13.setName("Josef");
+        user13.setCountry("UK");
+
+        User user14 = new User();
+        user14.setId(14);
+        user14.setName("Anton");
+        user14.setCountry("UK");
+
+        Solution.addUser(user11);
+        Solution.addUser(user12);
+        Solution.addUser(user13);
+//        Solution.addUser(user14);
+
+        Solution.followPlaylist(11, 1);
+        Solution.followPlaylist(11, 2);
+        Solution.followPlaylist(12, 1);
+        Solution.followPlaylist(12, 2);
+        Solution.followPlaylist(13, 1);
+//        Solution.followPlaylist(14, 3);
+
+        res = Solution.getSimilarUsers(11);
+        assertEquals(1, res.size());
     }
 
 }//End class

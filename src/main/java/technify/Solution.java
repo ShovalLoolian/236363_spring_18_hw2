@@ -21,7 +21,7 @@ public class Solution {
         PreparedStatement pstmt_songs = null;
         PreparedStatement pstmt_playlists = null;
         PreparedStatement pstmt_follows = null;
-        PreparedStatement pstmt_consistOf = null;//
+        PreparedStatement pstmt_consistOf = null;
 
         try {
             pstmt_users = connection.prepareStatement("CREATE TABLE Users\n" +
@@ -212,10 +212,10 @@ public class Solution {
             } else {
                 pstmt = connection.prepareStatement("INSERT INTO Users" +
                         " VALUES (?, ?, ?, ?)");
-                pstmt.setInt(1,user.getId());
+                pstmt.setInt(1, user.getId());
                 pstmt.setString(2, user.getName());
-                pstmt.setString(3,user.getCountry());
-                pstmt.setBoolean(4,user.getPremium());
+                pstmt.setString(3, user.getCountry());
+                pstmt.setBoolean(4, user.getPremium());
                 pstmt.execute();
             }
             results.close();
@@ -476,7 +476,44 @@ public class Solution {
 
     public static ReturnValue deleteSong(Song song)
     {
-        return null;
+        Connection connection = DBConnector.getConnection();
+        PreparedStatement pstmt1 = null;
+        PreparedStatement pstmt2 = null;
+        ReturnValue return_value = OK;
+
+        if(getSong(song.getId()).equals(Song.badSong())) {   //TODO: can I use here the getUserProfile function?
+            return_value =  NOT_EXISTS;
+        } else {
+            try { //TODO: can I do here both?
+                pstmt1 = connection.prepareStatement(
+                        "DELETE FROM ConsistOf " +
+                                "where song_id = ?");
+                pstmt1.setInt(1, song.getId());
+                pstmt1.executeUpdate();
+                pstmt2 = connection.prepareStatement(
+                        "DELETE FROM Songs " +
+                                "where song_id = ?");
+                pstmt2.setInt(1, song.getId());
+                pstmt2.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return_value = ERROR;
+            }
+            finally {
+                try {
+                    pstmt1.close();
+                    pstmt2.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return return_value;
     }
 
     public static ReturnValue updateSongName(Song song)
@@ -764,8 +801,7 @@ public class Solution {
             return_value = NOT_EXISTS;
         } else {
             try {
-                pstmt = connection.prepareStatement("INSERT INTO Follows" +
-                        " VALUES (?, ?)");
+                pstmt = connection.prepareStatement("INSERT INTO Follows" + " VALUES (?, ?)");
                 pstmt.setInt(1, userId);
                 pstmt.setInt(2, playlistId);
                 pstmt.execute();
@@ -916,7 +952,32 @@ public class Solution {
     }
 
     public static Integer getPlaylistFollowersCount(Integer playlistId){
-        return null;
+        Connection connection = DBConnector.getConnection();
+        PreparedStatement pstmt = null;
+        Integer count = 0;
+        try {
+            pstmt = connection.prepareStatement("SELECT COUNT(user_id) FROM Follows WHERE playlist_id = " + playlistId);
+            ResultSet results = pstmt.executeQuery();
+            if(results.next() == true) {
+                count = results.getInt(1);
+            }
+            results.close();
+        } catch (SQLException e) {
+            //e.printStackTrace()();
+        }
+        finally {
+            try {
+                pstmt.close();
+            } catch (SQLException e) {
+                //e.printStackTrace()();
+            }
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                //e.printStackTrace()();
+            }
+        }
+        return count;
     }
 
     public static String getMostPopularSong()
@@ -935,7 +996,7 @@ public class Solution {
         try {
             pstmt = connection.prepareStatement(queryForPlaylist);
             ResultSet results = pstmt.executeQuery();
-            if(results.next() == true) 
+            if(results.next() == true)
             {
             	biggest_song_id = results.getInt("song_id");
             	return_value = (getSong(biggest_song_id)).getName();
@@ -967,7 +1028,45 @@ public class Solution {
     }
 
     public static Integer getMostPopularPlaylist(){
-        return null;
+        Connection connection = DBConnector.getConnection();
+        PreparedStatement pstmt = null;
+        Integer popular_id = 0;
+        try {
+            //SELECT OrderID, MAX(c) FROM(SELECT OrderID, SUM(OrderID) AS c FROM [OrderDetails] GROUP BY OrderID)
+//            pstmt = connection.prepareStatement("SELECT playlist_id, MAX(sum)" +
+//                            "FROM(SELECT playlist_id, SUM(play_count) AS sum " +
+//                            "FROM (SELECT playlist_id, play_count FROM ConsistOf CO" +
+//                            "LEFT JOIN Songs S ON (CO.song_id = S.song_id)) GROUP BY playlist_id))");
+//            SELECT * FROM
+//                    (SELECT playlist_id, SUM(play_count) AS sum FROM
+//                            (SELECT playlist_id, play_count FROM
+//                                    ConsistOf CO LEFT JOIN Songs S
+//                                    ON (CO.song_id = S.song_id)) AS foo GROUP BY playlist_id) AS goo
+
+            pstmt = connection.prepareStatement("SELECT playlist_id, SUM(play_count) AS sum FROM " +
+                    "(SELECT playlist_id, play_count FROM ConsistOf CO LEFT JOIN Songs S " +
+                    "ON (CO.song_id = S.song_id)) AS foo GROUP BY playlist_id");
+                    ResultSet results = pstmt.executeQuery();
+            if(results.next() == true) {
+                popular_id = results.getInt(1);
+            }
+            results.close();
+        } catch (SQLException e) {
+            //e.printStackTrace()();
+        }
+        finally {
+            try {
+                pstmt.close();
+            } catch (SQLException e) {
+                //e.printStackTrace()();
+            }
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                //e.printStackTrace()();
+            }
+        }
+        return popular_id;
     }
 
     public static ArrayList<Integer> hottestPlaylistsOnTechnify()
@@ -1012,7 +1111,53 @@ public class Solution {
     }
 
     public static ArrayList<Integer> getSimilarUsers(Integer userId){
-        return null;
+        Connection connection = DBConnector.getConnection();
+        PreparedStatement pstmt_threshold = null;
+        PreparedStatement pstmt = null;
+        ArrayList<Integer> similar_users = new ArrayList<>();
+        double threshold = 0;
+
+//        String chooseAllPlaylistIdOfUserId = "SELECT playlist_id FROM Follows INNER JOIN follows ON "
+//                + "(consistOf.playlist_id = follows.playlist_id) WHERE user_id = " + userId;
+        try {
+            pstmt_threshold = connection.prepareStatement("SELECT COUNT(playlist_id) FROM Follows WHERE user_id = " + userId);
+            ResultSet results_threshold = pstmt_threshold.executeQuery();
+            if(results_threshold.next() == true) {
+                threshold = results_threshold.getInt(1)*0.75;
+            }
+            results_threshold.close();
+            pstmt = connection.prepareStatement("SELECT user_id FROM " +
+                    "(SELECT user_id, COUNT(user_id) " +
+                    "FROM (SELECT playlist_id FROM Follows WHERE user_id = " + userId + ") AS chosen " +
+                    "LEFT JOIN Follows ON (chosen.playlist_id = Follows.playlist_id) " +
+                    "WHERE NOT user_id = " +userId + " " +
+                    "GROUP BY user_id) AS above_thre " +
+                    "WHERE count >=" + threshold + " " +
+                    "ORDER BY user_id ASC " +
+                    "LIMIT 10");
+            ResultSet results = pstmt.executeQuery();
+            while(results.next() == true)
+            {
+                similar_users.add(results.getInt("user_id"));
+            }
+            results.close();
+        } catch (SQLException e) {
+            //e.printStackTrace()();
+        }
+        finally {
+            try {
+                pstmt_threshold.close();
+                pstmt.close();
+            } catch (SQLException e) {
+                //e.printStackTrace()();
+            }
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                //e.printStackTrace()();
+            }
+        }
+        return similar_users;
     }
 
     public static ArrayList<Integer> getTopCountryPlaylists(Integer userId) {
