@@ -630,8 +630,21 @@ public class Solution {
 			//TODO: NIV
     	   Connection connection = DBConnector.getConnection();
            PreparedStatement pstmt = null;
+           PreparedStatement pstmt_consistOf = null;
+           PreparedStatement pstmt_follows = null;
+           
            ReturnValue return_value = OK;
            try {
+        	   pstmt_consistOf = connection.prepareStatement(
+                       "DELETE FROM ConsistOf " +
+                               "where playlist_id = ?");
+        	   pstmt_consistOf.setInt(1, playlist.getId());
+        	   pstmt_consistOf.executeUpdate();
+        	   pstmt_follows =  connection.prepareStatement(
+                       "DELETE FROM follows " +
+                       "where playlist_id = ?");
+        	   pstmt_follows.setInt(1, playlist.getId());
+        	   pstmt_follows.executeUpdate();
                pstmt = connection.prepareStatement(
                        "DELETE FROM Playlists " +
                                "where playlist_id = ?");
@@ -648,6 +661,8 @@ public class Solution {
            finally {
                try {
                    pstmt.close();
+                   pstmt_consistOf.close();
+                   pstmt_follows.close();
                } catch (SQLException e) {
                    //e.printStackTrace()();
                }
@@ -721,6 +736,7 @@ public class Solution {
              else
              {
             	 //need to check why it's false 
+            	 /*
             	 pstmt_playlist = connection.prepareStatement("SELECT * FROM Playlists WHERE "
             	 		+ "playlist_id = "+ playlistId);
             	 pstmt_song = connection.prepareStatement("SELECT * FROM Songs WHERE "
@@ -731,6 +747,8 @@ public class Solution {
             		 return_value = NOT_EXISTS;
             	 else
             		 return_value = BAD_PARAMS;
+            	 * */
+            	 return_value = BAD_PARAMS;
              }
              results.close();
          } catch (SQLException e) {
@@ -1074,7 +1092,7 @@ public class Solution {
     	//TODO: NIV			
     	String queryForPlaylist = "SELECT playlist_id, AVG(play_count) FROM Songs RIGHT OUTER JOIN consistOf ON"
     			+ "(Songs.song_id = consistOf.song_id) GROUP BY playlist_id"
-    			+ " ORDER BY AVG(play_count) DESC, playlist_id DESC limit 10";
+    			+ " ORDER BY AVG(play_count) DESC, playlist_id ASC limit 10";
     					
     	ArrayList<Integer> playlistIds = new ArrayList<Integer>();
     	
@@ -1230,7 +1248,7 @@ public class Solution {
 
         String stringQuery = "SELECT playlist_id,COUNT(playlist_id) FROM follows"
                 + " WHERE user_id IN ("+getSimilarUsersId_noLimit+") AND playlist_id NOT IN ("+playlistIdsOfUser+")"
-                + "GROUP BY playlist_id ORDER BY COUNT(playlist_id) DESC, playlist_id DESC";
+                + "GROUP BY playlist_id ORDER BY COUNT(playlist_id) DESC, playlist_id ASC LIMIT 5";
 
 
         try {
@@ -1273,7 +1291,7 @@ public class Solution {
         		    	+chooseAllPlaylistIdOfUserId+") OR playlist_id is NULL) AND (genre = '"+genre+"')";
         
        String SongsRecommendationByGenre =	songsThatNotInPlaylistIdByGenre+ " ORDER BY play_count DESC,"
-       		+ " song_id DESC limit 10";
+       		+ " song_id ASC limit 10";
         
        ArrayList<Integer> songsIds = new ArrayList<Integer>();
         try {
