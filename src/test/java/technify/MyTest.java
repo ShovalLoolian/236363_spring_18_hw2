@@ -711,11 +711,21 @@ public class MyTest extends AbstractTest {
         Solution.addPlaylist(playlist1);
         Solution.addPlaylist(playlist2);
 
+        // 5 before 7
+        playlist2.setId(5);
+        Solution.addPlaylist(playlist2);
+        for(int i = 3; i < 13; i++) {
+            if(i!=5) {
+                playlist2.setId(i);
+                Solution.addPlaylist(playlist2);
+            }
+        }
+
         Song song11 = new Song();
         song11.setId(11);
-        song11.setName("Toy");
+        song11.setName("Echame La culpa");
         song11.setGenre("Pop");
-        song11.setCountry("Israel");
+        song11.setCountry("Spain");
 
         Song song21 = new Song();
         song21.setId(21);
@@ -737,14 +747,58 @@ public class MyTest extends AbstractTest {
         Solution.addSongToPlaylist(21,2);
         Solution.addSongToPlaylist(22,2);
 
-        User user11 = new User();
-        user11.setId(1);
-        user11.setName("Monica");
-        user11.setCountry("Spain");
+        Solution.songPlay(11, 100);
+        Solution.songPlay(21, 30);
+        Solution.songPlay(22, 45);
 
+        song22.setCountry("Spain");
+        for(int i = 3; i < 13; i++) {
+            song22.setId(i+20);
+            Solution.addSong(song22);
+            Solution.addSongToPlaylist(i+20, i);
+            if(i%2 == 0) {
+                Solution.songPlay(i+20, i+20);
+            } else {
+                if(i == 5) {
+                    Solution.songPlay(i+20, 7);
+                } else {
+                    Solution.songPlay(i+20, i);
+                }
+            }
+        }
+
+
+        User user1 = new User();
+        user1.setId(1);
+        user1.setName("Monica");
+        user1.setCountry("Spain");
+        user1.setPremium(true);
+        Solution.addUser(user1);
 
         res = Solution.getTopCountryPlaylists(1);
-//        assertEquals(2, res);
+        assertEquals(10, res.size());
+
+        int plID;
+        plID = res.get(0);
+        assertEquals(1, plID);
+        plID = res.get(1);
+        assertEquals(2, plID);
+        plID = res.get(2);
+        assertEquals(12, plID);
+        plID = res.get(3);
+        assertEquals(10, plID);
+        plID = res.get(4);
+        assertEquals(8, plID);
+        plID = res.get(5);
+        assertEquals(6, plID);
+        plID = res.get(6);
+        assertEquals(4, plID);
+        plID = res.get(7);
+        assertEquals(11, plID);
+        plID = res.get(8);
+        assertEquals(9, plID);
+        plID = res.get(9);
+        assertEquals(7, plID);
 
     }
 

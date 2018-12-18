@@ -1162,36 +1162,101 @@ public class Solution {
 
     public static ArrayList<Integer> getTopCountryPlaylists(Integer userId) {
 
-//        Connection connection = DBConnector.getConnection();
-//        PreparedStatement pstmt = null;
-//        ArrayList<Integer> similar_users = new ArrayList<>();
-//        try {
-//            pstmt = connection.prepareStatement("SELECT * FROM hello_world");
-//            ResultSet results = pstmt.executeQuery();
-//            results.close();
-//
-//        } catch (SQLException e) {
-//            //e.printStackTrace()();
-//        }
-//        finally {
-//            try {
-//                pstmt.close();
-//            } catch (SQLException e) {
-//                //e.printStackTrace()();
-//            }
-//            try {
-//                connection.close();
-//            } catch (SQLException e) {
-//                //e.printStackTrace()();
-//            }
-//        }
-        return null;
+        Connection connection = DBConnector.getConnection();
+        PreparedStatement pstmt = null;
+        ArrayList<Integer> topCountryPlaylists = new ArrayList<>();
+
+        if(getUserProfile(userId).getPremium() == true) {   //TODO: change this to SQL
+            try {
+                String country = getUserProfile(userId).getCountry();   //TODO: SQL
+                pstmt = connection.prepareStatement("SELECT playlist_id FROM " +
+                        "(SELECT playlistsSongs.playlist_id, play_count FROM " +
+                        "(SELECT ConsistOf.playlist_id, song_id FROM " +
+                        "(SELECT ConsistOf.playlist_id " +
+                        "FROM ConsistOf " +
+                        "INNER JOIN Songs ON ConsistOf.song_id=Songs.song_id " +
+                        "WHERE country='" + country + "') AS containCountry " +
+                        "LEFT JOIN ConsistOf ON containCountry.playlist_id = ConsistOf.playlist_id) AS playlistsSongs " +
+                        "LEFT JOIN Songs ON playlistsSongs.song_id = Songs.song_id) AS sums " +
+                        "GROUP BY playlist_id " +
+                        "ORDER BY SUM(play_count) DESC " +
+                        "LIMIT 10");
+                ResultSet results = pstmt.executeQuery();
+                while(results.next() == true)
+                {
+                    topCountryPlaylists.add(results.getInt("playlist_id"));
+                }
+                results.close();
+
+            } catch (SQLException e) {
+                //e.printStackTrace()();
+            }
+            finally {
+                try {
+                    pstmt.close();
+                } catch (SQLException e) {
+                    //e.printStackTrace()();
+                }
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    //e.printStackTrace()();
+                }
+            }
+        }
+
+        return topCountryPlaylists;
     }
 
     public static ArrayList<Integer> getPlaylistRecommendation (Integer userId)
     {
-    	//TODO: NIV
-        return null;
+        //TODO: NIV
+        Connection connection = DBConnector.getConnection();
+        PreparedStatement pstmt = null;
+        ArrayList<Integer> playlistsIds = new ArrayList<>();
+
+        String getThreshold = "(SELECT COUNT(playlist_id) FROM Follows WHERE"
+                + " user_id = " + userId+")*0.75";
+        String getSimilarUsersId_noLimit = "SELECT user_id FROM " +
+                "(SELECT user_id, COUNT(user_id) " +
+                "FROM (SELECT playlist_id FROM Follows WHERE user_id = " + userId + ") AS chosen " +
+                "LEFT JOIN Follows ON (chosen.playlist_id = Follows.playlist_id) " +
+                "WHERE NOT user_id = " +userId + " " +
+                "GROUP BY user_id) AS above_thre " +
+                "WHERE count >=" + getThreshold + " " +
+                "ORDER BY user_id ASC";
+
+        String playlistIdsOfUser = "SELECT playlist_id FROM follows WHERE user_id = "+userId;
+
+        String stringQuery = "SELECT playlist_id,COUNT(playlist_id) FROM follows"
+                + " WHERE user_id IN ("+getSimilarUsersId_noLimit+") AND playlist_id NOT IN ("+playlistIdsOfUser+")"
+                + "GROUP BY playlist_id ORDER BY COUNT(playlist_id) DESC, playlist_id DESC";
+
+
+        try {
+            pstmt = connection.prepareStatement(stringQuery);
+            ResultSet results = pstmt.executeQuery();
+            while(results.next() == true)
+            {
+                playlistsIds.add(results.getInt("playlist_id"));
+            }
+            results.close();
+        } catch (SQLException e) {
+            //e.printStackTrace()();
+        }
+        finally {
+            try {
+                pstmt.close();
+            } catch (SQLException e) {
+                //e.printStackTrace()();
+            }
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                //e.printStackTrace()();
+            }
+        }
+        return playlistsIds;
     }
 
     public static ArrayList<Integer> getSongsRecommendationByGenre(Integer userId, String genre)
