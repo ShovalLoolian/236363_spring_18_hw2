@@ -598,6 +598,7 @@ public class MyTest extends AbstractTest {
     public void getSimilarUsersTest()
     {
         ArrayList<Integer> res;
+        int userId;
 
         Playlist playlist1 = new Playlist();
         playlist1.setId(1);
@@ -610,13 +611,13 @@ public class MyTest extends AbstractTest {
         playlist2.setDescription("Latin songs");
 
         Playlist playlist3 = new Playlist();
-        playlist2.setId(3);
-        playlist2.setGenre("Rock");
-        playlist2.setDescription("Rock songs");
+        playlist3.setId(3);
+        playlist3.setGenre("Rock");
+        playlist3.setDescription("Rock songs");
 
         Solution.addPlaylist(playlist1);
         Solution.addPlaylist(playlist2);
-//        Solution.addPlaylist(playlist3);
+        Solution.addPlaylist(playlist3);
 
         User user11 = new User();
         user11.setId(11);
@@ -641,17 +642,110 @@ public class MyTest extends AbstractTest {
         Solution.addUser(user11);
         Solution.addUser(user12);
         Solution.addUser(user13);
-//        Solution.addUser(user14);
+        Solution.addUser(user14);
 
         Solution.followPlaylist(11, 1);
         Solution.followPlaylist(11, 2);
         Solution.followPlaylist(12, 1);
         Solution.followPlaylist(12, 2);
+        Solution.followPlaylist(12, 3);
         Solution.followPlaylist(13, 1);
-//        Solution.followPlaylist(14, 3);
+        Solution.followPlaylist(14, 3);
 
+        // only 12 is similar to 11
         res = Solution.getSimilarUsers(11);
         assertEquals(1, res.size());
+        userId = res.get(0);
+        assertEquals(12, userId);
+        // no users similar to 12
+        res = Solution.getSimilarUsers(12);
+        assertEquals(0, res.size());
+        // 11 and 12 similar to 13
+        res = Solution.getSimilarUsers(13);
+        assertEquals(2, res.size());
+        userId = res.get(0);
+        assertEquals(11, userId);
+        userId = res.get(1);
+        assertEquals(12, userId);
+        // only 12 is similar to 14
+        res = Solution.getSimilarUsers(14);
+        assertEquals(1, res.size());
+        userId = res.get(0);
+        assertEquals(12, userId);
+        Solution.followPlaylist(11, 3);
+        // now 11 and 12 similar to 14
+        res = Solution.getSimilarUsers(14);
+        assertEquals(2, res.size());
+        userId = res.get(0);
+        assertEquals(11, userId);
+        userId = res.get(1);
+        assertEquals(12, userId);
+
+        // add new user - not follow any playlist
+        res = Solution.getSimilarUsers(15);
+        assertEquals(0, res.size());
+        User user15 = new User();
+        user15.setId(15);
+        user15.setName("Bernard");
+        user15.setCountry("Spain");
+        Solution.addUser(user15);
+        res = Solution.getSimilarUsers(15);
+        assertEquals(0, res.size());
+    }
+
+    @Test
+    public void getTopCountryPlaylistsTest()
+    {
+        ArrayList<Integer> res;
+
+        Playlist playlist1 = new Playlist();
+        playlist1.setId(1);
+        playlist1.setGenre("Pop");
+        playlist1.setDescription("Pop songs");
+
+        Playlist playlist2 = new Playlist();
+        playlist2.setId(2);
+        playlist2.setGenre("Latin");
+        playlist2.setDescription("Latin songs");
+
+        Solution.addPlaylist(playlist1);
+        Solution.addPlaylist(playlist2);
+
+        Song song11 = new Song();
+        song11.setId(11);
+        song11.setName("Toy");
+        song11.setGenre("Pop");
+        song11.setCountry("Israel");
+
+        Song song21 = new Song();
+        song21.setId(21);
+        song21.setName("Despacito");
+        song21.setGenre("Latin");
+        song21.setCountry("Spain");
+
+        Song song22 = new Song();
+        song22.setId(22);
+        song22.setName("Baby");
+        song22.setGenre("Latin");
+        song22.setCountry("USA");
+
+        Solution.addSong(song11);
+        Solution.addSong(song21);
+        Solution.addSong(song22);
+
+        Solution.addSongToPlaylist(11,1);
+        Solution.addSongToPlaylist(21,2);
+        Solution.addSongToPlaylist(22,2);
+
+        User user11 = new User();
+        user11.setId(1);
+        user11.setName("Monica");
+        user11.setCountry("Spain");
+
+
+        res = Solution.getTopCountryPlaylists(1);
+//        assertEquals(2, res);
+
     }
 
 }//End class

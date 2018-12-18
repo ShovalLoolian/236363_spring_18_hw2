@@ -1161,6 +1161,30 @@ public class Solution {
     }
 
     public static ArrayList<Integer> getTopCountryPlaylists(Integer userId) {
+
+//        Connection connection = DBConnector.getConnection();
+//        PreparedStatement pstmt = null;
+//        ArrayList<Integer> similar_users = new ArrayList<>();
+//        try {
+//            pstmt = connection.prepareStatement("SELECT * FROM hello_world");
+//            ResultSet results = pstmt.executeQuery();
+//            results.close();
+//
+//        } catch (SQLException e) {
+//            //e.printStackTrace()();
+//        }
+//        finally {
+//            try {
+//                pstmt.close();
+//            } catch (SQLException e) {
+//                //e.printStackTrace()();
+//            }
+//            try {
+//                connection.close();
+//            } catch (SQLException e) {
+//                //e.printStackTrace()();
+//            }
+//        }
         return null;
     }
 
