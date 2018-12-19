@@ -555,8 +555,14 @@ public class MyTest extends AbstractTest {
         playlist2.setGenre("Latin");
         playlist2.setDescription("Latin songs");
 
+        Playlist playlist3 = new Playlist();
+        playlist3.setId(3);
+        playlist3.setGenre("Latin");
+        playlist3.setDescription("Latin songs2");
+
         Solution.addPlaylist(playlist1);
         Solution.addPlaylist(playlist2);
+        Solution.addPlaylist(playlist3);
 
         Song song11 = new Song();
         song11.setId(11);
@@ -576,21 +582,29 @@ public class MyTest extends AbstractTest {
         song22.setGenre("Latin");
         song22.setCountry("USA");
 
+        Song song31 = new Song();
+        song31.setId(31);
+        song31.setName("Baby");
+        song31.setGenre("Latin");
+        song31.setCountry("USA");
+
         Solution.addSong(song11);
         Solution.addSong(song21);
         Solution.addSong(song22);
+        Solution.addSong(song31);
 
         Solution.addSongToPlaylist(11,1);
         Solution.addSongToPlaylist(21,2);
         Solution.addSongToPlaylist(22,2);
+        Solution.addSongToPlaylist(31,3);
 
         Solution.songPlay(11, 100);
         Solution.songPlay(21, 65);
         Solution.songPlay(22, 45);
-
+        Solution.songPlay(31, 110);
 
         res = Solution.getMostPopularPlaylist();
-        assertEquals(2, res);
+        assertEquals(3, res);
 
     }
 

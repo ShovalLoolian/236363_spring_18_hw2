@@ -1048,25 +1048,16 @@ public class Solution {
     public static Integer getMostPopularPlaylist(){
         Connection connection = DBConnector.getConnection();
         PreparedStatement pstmt = null;
-        Integer popular_id = 0;
+        Integer popular_playlist_id = 0;
         try {
-            //SELECT OrderID, MAX(c) FROM(SELECT OrderID, SUM(OrderID) AS c FROM [OrderDetails] GROUP BY OrderID)
-//            pstmt = connection.prepareStatement("SELECT playlist_id, MAX(sum)" +
-//                            "FROM(SELECT playlist_id, SUM(play_count) AS sum " +
-//                            "FROM (SELECT playlist_id, play_count FROM ConsistOf CO" +
-//                            "LEFT JOIN Songs S ON (CO.song_id = S.song_id)) GROUP BY playlist_id))");
-//            SELECT * FROM
-//                    (SELECT playlist_id, SUM(play_count) AS sum FROM
-//                            (SELECT playlist_id, play_count FROM
-//                                    ConsistOf CO LEFT JOIN Songs S
-//                                    ON (CO.song_id = S.song_id)) AS foo GROUP BY playlist_id) AS goo
-
-            pstmt = connection.prepareStatement("SELECT playlist_id, SUM(play_count) AS sum FROM " +
-                    "(SELECT playlist_id, play_count FROM ConsistOf CO LEFT JOIN Songs S " +
-                    "ON (CO.song_id = S.song_id)) AS foo GROUP BY playlist_id");
+            pstmt = connection.prepareStatement("SELECT playlist_id, SUM(play_count) " +
+                    "FROM consistOf " +
+                    "INNER JOIN Songs ON ConsistOf.song_id = Songs.song_id " +
+                    "GROUP BY playlist_id " +
+                    "ORDER BY SUM(play_count) DESC, playlist_id DESC");
                     ResultSet results = pstmt.executeQuery();
             if(results.next() == true) {
-                popular_id = results.getInt(1);
+                popular_playlist_id = results.getInt("playlist_id");
             }
             results.close();
         } catch (SQLException e) {
@@ -1084,7 +1075,7 @@ public class Solution {
                 //e.printStackTrace()();
             }
         }
-        return popular_id;
+        return popular_playlist_id;
     }
 
     public static ArrayList<Integer> hottestPlaylistsOnTechnify()
