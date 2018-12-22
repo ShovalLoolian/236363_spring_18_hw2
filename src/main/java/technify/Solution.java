@@ -573,7 +573,8 @@ public class Solution {
          Playlist return_playlist = new Playlist();
 
          try {
-             pstmt = connection.prepareStatement("SELECT * FROM Playlists WHERE playlist_id = " + playlistId);
+             pstmt = connection.prepareStatement("SELECT * FROM Playlists WHERE playlist_id = ?");
+             pstmt.setInt(1,playlistId);
              ResultSet results = pstmt.executeQuery();
              if(results.next() == true) {
             	 return_playlist.setId(results.getInt("playlist_id"));
@@ -694,38 +695,35 @@ public class Solution {
     	//TODO: NIV
     	 Connection connection = DBConnector.getConnection();
          PreparedStatement pstmt = null;
-         PreparedStatement pstmt_playlist = null;
-         PreparedStatement pstmt_song = null;
+         PreparedStatement pstmt_add = null;
          ReturnValue return_value = OK;
          
-         String queryForPlaylist = "SELECT * FROM Playlists WHERE playlist_id = "+ playlistId
-        		 + " AND genre IN (SELECT genre FROM Songs WHERE song_id = "+songid + ")";
+         //String queryForCheck = "SELECT * FROM Playlists WHERE playlist_id = ?"
+        //		 + " AND genre IN (SELECT genre FROM Songs WHERE song_id = ? )";
+
+         String selectQeury = "(SELECT playlist_id, song_id FROM (Playlists INNER JOIN Songs ON (Playlists.genre = Songs.genre)) "
+         + "WHERE Playlists.playlist_id = ? AND Songs.song_id = ?)";
+         
+         String queryForAdd = "INSERT INTO ConsistOf ("+selectQeury+")";
          
          try {
-             pstmt = connection.prepareStatement(queryForPlaylist);
+             pstmt = connection.prepareStatement(selectQeury);
+             pstmt.setInt(1,playlistId);
+             pstmt.setInt(2,songid);
              ResultSet results = pstmt.executeQuery();
              if(results.next() == true) 
              {
-            	 return_value = addToConsistOf(playlistId,songid);
+            	 pstmt_add = connection.prepareStatement(queryForAdd);
+            	 pstmt_add.setInt(1,playlistId);
+            	 pstmt_add.setInt(2,songid);
+            	 pstmt_add.execute();
+            	 return_value = OK;
              }
              else
              {
-            	 //need to check why it's false 
-            	 /*
-            	 pstmt_playlist = connection.prepareStatement("SELECT * FROM Playlists WHERE "
-            	 		+ "playlist_id = "+ playlistId);
-            	 pstmt_song = connection.prepareStatement("SELECT * FROM Songs WHERE "
-             	 		+ "song_id = "+ songid);
-            	 ResultSet results_playlist = pstmt_playlist.executeQuery();
-            	 ResultSet results_song = pstmt_song.executeQuery();
-            	 if(results_playlist.next() != true || results_song.next() != true)
-            		 return_value = NOT_EXISTS;
-            	 else
-            		 return_value = BAD_PARAMS;
-            	 * */
             	 return_value = BAD_PARAMS;
              }
-             results.close();
+             results.close(); 
          } catch (SQLException e) {
              // shouldn't get here....
              return_value = getErrorValue(e);
@@ -733,8 +731,7 @@ public class Solution {
          finally {
              try {
                  pstmt.close();
-                 if(pstmt_playlist != null) pstmt_playlist.close();
-                 if(pstmt_song != null) pstmt_song.close();
+                 if(pstmt_add != null) pstmt_add.close();
              } catch (SQLException e) {
                  e.printStackTrace();
              }
@@ -774,12 +771,12 @@ public class Solution {
               try {
                   pstmt.close();
               } catch (SQLException e) {
-                  e.printStackTrace();
+                  //e.printStackTrace()();
               }
               try {
                   connection.close();
               } catch (SQLException e) {
-                  e.printStackTrace();
+                  //e.printStackTrace()();
               }
           }
        return return_value;
@@ -902,13 +899,14 @@ public class Solution {
     {
     	//TODO: NIV
     	String queryForPlaylist = "SELECT SUM(play_count) FROM Songs WHERE song_id IN "
-    			+ "(SELECT song_id FROM consistOf WHERE playlist_id = "+playlistId+")";
+    			+ "(SELECT song_id FROM consistOf WHERE playlist_id = ?)";
     	
    	 	Connection connection = DBConnector.getConnection();
         PreparedStatement pstmt = null;
         Integer return_value = 0;
         try {
             pstmt = connection.prepareStatement(queryForPlaylist);
+            pstmt.setInt(1,playlistId);
             ResultSet results = pstmt.executeQuery();
             if(results.next() == true) 
             {
@@ -970,21 +968,19 @@ public class Solution {
     	//TODO: NIV
     	String playlistsAreEmpty = "No songs";
     	String return_value = playlistsAreEmpty;
-    	String queryForPlaylist = "SELECT song_id, COUNT(song_id) FROM consistOf GROUP BY song_id"
-    			+ " ORDER BY COUNT(song_id) DESC, song_id DESC";
-    	
+    	String queryForPlaylist = "SELECT song_id FROM consistOf GROUP BY song_id"
+    			+ " ORDER BY COUNT(song_id) DESC, song_id DESC LIMIT 1";
+        String queryString = "SELECT song_name FROM Songs WHERE song_id = ("+queryForPlaylist+")";
+        
    	 	Connection connection = DBConnector.getConnection();
         PreparedStatement pstmt = null;
-        
-        int biggest_song_id = -1;
-        
+ 
         try {
-            pstmt = connection.prepareStatement(queryForPlaylist);
+            pstmt = connection.prepareStatement(queryString);
             ResultSet results = pstmt.executeQuery();
             if(results.next() == true)
             {
-            	biggest_song_id = results.getInt("song_id");
-            	return_value = (getSong(biggest_song_id)).getName();
+            	return_value = results.getString("song_name");
             }
             else
             {
@@ -1051,9 +1047,9 @@ public class Solution {
     public static ArrayList<Integer> hottestPlaylistsOnTechnify()
     {
     	//TODO: NIV			
-    	String queryForPlaylist = "SELECT playlist_id, AVG(play_count) FROM Songs RIGHT OUTER JOIN consistOf ON"
+    	String queryForPlaylist = "SELECT playlist_id, floor(AVG(play_count)) FROM Songs RIGHT OUTER JOIN consistOf ON"
     			+ "(Songs.song_id = consistOf.song_id) GROUP BY playlist_id"
-    			+ " ORDER BY AVG(play_count) DESC, playlist_id ASC limit 10";
+    			+ " ORDER BY floor(AVG(play_count)) DESC, playlist_id ASC limit 10";
     					
     	ArrayList<Integer> playlistIds = new ArrayList<Integer>();
     	
@@ -1193,17 +1189,17 @@ public class Solution {
         ArrayList<Integer> playlistsIds = new ArrayList<>();
 
         String getThreshold = "(SELECT COUNT(playlist_id) FROM Follows WHERE"
-                + " user_id = " + userId+")*0.75";
+                + " user_id = ?)*0.75";
         String getSimilarUsersId_noLimit = "SELECT user_id FROM " +
                 "(SELECT user_id, COUNT(user_id) " +
-                "FROM (SELECT playlist_id FROM Follows WHERE user_id = " + userId + ") AS chosen " +
+                "FROM (SELECT playlist_id FROM Follows WHERE user_id = ?) AS chosen " +
                 "LEFT JOIN Follows ON (chosen.playlist_id = Follows.playlist_id) " +
-                "WHERE NOT user_id = " +userId + " " +
+                "WHERE NOT user_id = ? " +
                 "GROUP BY user_id) AS above_thre " +
                 "WHERE count >=" + getThreshold + " " +
                 "ORDER BY user_id ASC";
 
-        String playlistIdsOfUser = "SELECT playlist_id FROM follows WHERE user_id = "+userId;
+        String playlistIdsOfUser = "SELECT playlist_id FROM follows WHERE user_id = ?";
 
         String stringQuery = "SELECT playlist_id,COUNT(playlist_id) FROM follows"
                 + " WHERE user_id IN ("+getSimilarUsersId_noLimit+") AND playlist_id NOT IN ("+playlistIdsOfUser+")"
@@ -1212,6 +1208,10 @@ public class Solution {
 
         try {
             pstmt = connection.prepareStatement(stringQuery);
+            pstmt.setInt(1,userId);
+            pstmt.setInt(2,userId);
+            pstmt.setInt(3,userId);
+            pstmt.setInt(4,userId);
             ResultSet results = pstmt.executeQuery();
             while(results.next() == true)
             {
@@ -1243,11 +1243,11 @@ public class Solution {
         PreparedStatement pstmt = null;
         
         String chooseAllPlaylistIdOfUserId = "SELECT consistOf.playlist_id FROM consistOf INNER JOIN follows ON "
-        		+ "(consistOf.playlist_id = follows.playlist_id) WHERE user_id = " + userId;
+        		+ "(consistOf.playlist_id = follows.playlist_id) WHERE user_id = ?";
         
        String songsThatNotInPlaylistIdByGenre = "SELECT Songs.song_id FROM Songs LEFT OUTER JOIN consistOf ON " 
         		    	+ "(Songs.song_id = consistOf.song_id) WHERE (playlist_id NOT IN ("
-        		    	+chooseAllPlaylistIdOfUserId+") OR playlist_id is NULL) AND (genre = '"+genre+"')";
+        		    	+chooseAllPlaylistIdOfUserId+") OR playlist_id is NULL) AND (genre = ?)";
         
        String SongsRecommendationByGenre =	songsThatNotInPlaylistIdByGenre+ " ORDER BY play_count DESC,"
        		+ " song_id ASC limit 10";
@@ -1255,6 +1255,8 @@ public class Solution {
        ArrayList<Integer> songsIds = new ArrayList<Integer>();
         try {
             pstmt = connection.prepareStatement(SongsRecommendationByGenre);
+            pstmt.setInt(1,userId);
+            pstmt.setString(2, genre);
             ResultSet results = pstmt.executeQuery();
             while(results.next() == true) 
             {
@@ -1299,38 +1301,6 @@ public class Solution {
 		}
     	return ERROR;
     }
-    
-    private static ReturnValue addToConsistOf(Integer playlist_id, Integer song_id)
-    {
-    	Connection connection = DBConnector.getConnection();
-        PreparedStatement pstmt_co = null;
-        ReturnValue return_value = OK;
-        
-        try {
-        	pstmt_co = connection.prepareStatement("INSERT INTO ConsistOf" +
-                        " VALUES (?, ?)");
-        	pstmt_co.setInt(1,playlist_id);
-        	pstmt_co.setInt(2, song_id);
-        	pstmt_co.execute();
-            return_value = OK;
-        } 
-        catch (SQLException e) 
-        {
-            return_value = getErrorValue(e);
-        }
-        finally {
-            try {
-            	pstmt_co.close();
-            } catch (SQLException e) {
-                return_value = ERROR;
-            }
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                return_value = ERROR;
-            }
-        }
-        return return_value;
-    }
+
 }
 
