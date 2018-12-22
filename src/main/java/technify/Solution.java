@@ -1050,11 +1050,19 @@ public class Solution {
         PreparedStatement pstmt = null;
         Integer popular_playlist_id = 0;
         try {
-            pstmt = connection.prepareStatement("SELECT playlist_id, SUM(play_count) " +
-                    "FROM consistOf " +
-                    "INNER JOIN Songs ON ConsistOf.song_id = Songs.song_id " +
+//            pstmt = connection.prepareStatement("SELECT playlist_id, SUM(play_count) " +
+//                    "FROM consistOf " +
+//                    "INNER JOIN Songs ON ConsistOf.song_id = Songs.song_id " +
+//                    "GROUP BY playlist_id " +
+//                    "ORDER BY SUM(play_count) DESC, playlist_id DESC");
+
+            pstmt = connection.prepareStatement("SELECT playlist_id, coalesce(sum(play_count), 0) AS co FROM " +
+                    "(SELECT playlists.playlist_id, song_id " +
+                    "FROM playlists " +
+                    "LEFT JOIN consistOf ON consistOf.playlist_id = playlists.playlist_id) AS foo " +
+                    "LEFT JOIN songs ON foo.song_id = songs.song_id " +
                     "GROUP BY playlist_id " +
-                    "ORDER BY SUM(play_count) DESC, playlist_id DESC");
+                    "ORDER BY co DESC, playlist_id DESC");
                     ResultSet results = pstmt.executeQuery();
             if(results.next() == true) {
                 popular_playlist_id = results.getInt("playlist_id");
@@ -1181,14 +1189,14 @@ public class Solution {
                 pstmt = connection.prepareStatement("SELECT playlist_id FROM " +
                         "(SELECT playlistsSongs.playlist_id, play_count FROM " +
                         "(SELECT ConsistOf.playlist_id, song_id FROM " +
-                        "(SELECT ConsistOf.playlist_id " +
+                        "(SELECT DISTINCT ConsistOf.playlist_id " +
                         "FROM ConsistOf " +
                         "INNER JOIN Songs ON ConsistOf.song_id=Songs.song_id " +
                         "WHERE country='" + country + "') AS containCountry " +
                         "LEFT JOIN ConsistOf ON containCountry.playlist_id = ConsistOf.playlist_id) AS playlistsSongs " +
                         "LEFT JOIN Songs ON playlistsSongs.song_id = Songs.song_id) AS sums " +
                         "GROUP BY playlist_id " +
-                        "ORDER BY SUM(play_count) DESC " +
+                        "ORDER BY SUM(play_count) DESC, playlist_id ASC " +
                         "LIMIT 10");
                 ResultSet results = pstmt.executeQuery();
                 while(results.next() == true)

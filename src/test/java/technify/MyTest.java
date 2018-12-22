@@ -197,6 +197,19 @@ public class MyTest extends AbstractTest {
         newSong2.setName("Echame La Culpa");
         res = Solution.updateSongName(newSong2);
         assertEquals(OK, res);
+
+        // check init play count
+        Song song2 = new Song();
+        Song songFromDB;
+        song2.setId(9);
+        song2.setName("Toy");
+        song2.setGenre("Pop");
+        song2.setCountry("Israel");
+        song2.setPlayCount(3);
+        res = Solution.addSong(song2);
+        assertEquals(OK, res);
+        songFromDB = Solution.getSong(9);
+        assertEquals(0, songFromDB.getPlayCount());
     }
 //
 //    @Test
@@ -435,6 +448,7 @@ public class MyTest extends AbstractTest {
     {
         ReturnValue res;
         Song newSong = new Song();
+        Song songFromDB;
         newSong.setId(1);
         newSong.setName("Toy");
         newSong.setGenre("Pop");
@@ -443,12 +457,18 @@ public class MyTest extends AbstractTest {
         assertEquals(OK, res);
         res = Solution.songPlay(1, 5);
         assertEquals(OK, res);
+        songFromDB = Solution.getSong(1);
+        assertEquals(5, songFromDB.getPlayCount());
         res = Solution.songPlay(-1, 5);
         assertEquals(NOT_EXISTS, res);
         res = Solution.songPlay(1, -6);
         assertEquals(BAD_PARAMS, res);
+        songFromDB = Solution.getSong(1);
+        assertEquals(5, songFromDB.getPlayCount());
         res = Solution.songPlay(1, -2);
         assertEquals(OK, res);
+        songFromDB = Solution.getSong(1);
+        assertEquals(3, songFromDB.getPlayCount());
         res = Solution.songPlay(2, 5);
         assertEquals(NOT_EXISTS, res);
     }
@@ -605,7 +625,38 @@ public class MyTest extends AbstractTest {
 
         res = Solution.getMostPopularPlaylist();
         assertEquals(3, res);
+    }
 
+    @Test
+    public void getMostPopularPlaylistCornerCaseTest()
+    {
+        int res;
+
+        Playlist playlist1 = new Playlist();
+        playlist1.setId(1);
+        playlist1.setGenre("Pop");
+        playlist1.setDescription("Pop songs");
+
+        Playlist playlist2 = new Playlist();
+        playlist2.setId(2);
+        playlist2.setGenre("Latin");
+        playlist2.setDescription("Latin songs");
+
+        Solution.addPlaylist(playlist2);
+        Solution.addPlaylist(playlist1);
+
+        Song song11 = new Song();
+        song11.setId(11);
+        song11.setName("Toy");
+        song11.setGenre("Pop");
+        song11.setCountry("Israel");
+
+        Solution.addSong(song11);
+
+        Solution.addSongToPlaylist(11,1);
+
+        res = Solution.getMostPopularPlaylist();
+        assertEquals(2, res);
     }
 
     @Test
@@ -658,12 +709,17 @@ public class MyTest extends AbstractTest {
         Solution.addUser(user13);
         Solution.addUser(user14);
 
+        res = Solution.getSimilarUsers(11);
+        assertEquals(0, res.size());
+
         Solution.followPlaylist(11, 1);
         Solution.followPlaylist(11, 2);
         Solution.followPlaylist(12, 1);
         Solution.followPlaylist(12, 2);
         Solution.followPlaylist(12, 3);
         Solution.followPlaylist(13, 1);
+        res = Solution.getSimilarUsers(14);
+        assertEquals(0, res.size());
         Solution.followPlaylist(14, 3);
 
         // only 12 is similar to 11
