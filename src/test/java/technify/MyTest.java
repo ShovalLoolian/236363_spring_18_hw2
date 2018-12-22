@@ -868,7 +868,7 @@ public class MyTest extends AbstractTest {
         plID = res.get(8);
         assertEquals(9, plID);
         plID = res.get(9);
-        assertEquals(7, plID);
+        assertEquals(5, plID);
 
     }
 
