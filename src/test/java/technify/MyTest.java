@@ -198,7 +198,7 @@ public class MyTest extends AbstractTest {
         res = Solution.updateSongName(newSong2);
         assertEquals(OK, res);
 
-        // check init play count
+        // check init playCount
         Song song2 = new Song();
         Song songFromDB;
         song2.setId(9);

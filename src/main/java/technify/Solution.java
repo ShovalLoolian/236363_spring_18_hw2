@@ -320,7 +320,7 @@ public class Solution {
     public static ReturnValue updateUserPremium(Integer userId)
     {
         User user = getUserProfile(userId);
-        if(user.equals(User.badUser())) {//TODO: change
+        if(user.equals(User.badUser())) {//TODO: change this
             return NOT_EXISTS;
         }
         if(user.getPremium() == true) {
