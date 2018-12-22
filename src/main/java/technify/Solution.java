@@ -204,36 +204,25 @@ public class Solution {
         ReturnValue return_value = OK;
 
         try {
-            pstmt = connection.prepareStatement("SELECT * FROM Users WHERE user_id = " +
-                    user.getId());
-            ResultSet results = pstmt.executeQuery();
-            if(results.next() == true) {
-                return_value = ALREADY_EXISTS;
-            } else {
-                pstmt = connection.prepareStatement("INSERT INTO Users" +
-                        " VALUES (?, ?, ?, ?)");
-                pstmt.setInt(1, user.getId());
-                pstmt.setString(2, user.getName());
-                pstmt.setString(3, user.getCountry());
-                pstmt.setBoolean(4, user.getPremium());
-                pstmt.execute();
-            }
-            results.close();
+            pstmt = connection.prepareStatement("INSERT INTO Users" +
+                    " VALUES (?, ?, ?, ?)");
+            pstmt.setInt(1, user.getId());
+            pstmt.setString(2, user.getName());
+            pstmt.setString(3, user.getCountry());
+            pstmt.setBoolean(4, user.getPremium());
+            pstmt.execute();
         } catch (SQLException e) {
-//            e.printStackTrace();
             return_value = getErrorValue(e);
         }
         finally {
             try {
                 pstmt.close();
             } catch (SQLException e) {
-//                e.printStackTrace();
                 return_value = ERROR;
             }
             try {
                 connection.close();
             } catch (SQLException e) {
-//                e.printStackTrace();
                 return_value = ERROR;
             }
         }
@@ -258,7 +247,6 @@ public class Solution {
             results.close();
 
         } catch (SQLException e) {
-            e.printStackTrace();
         }
         finally {
             try {
@@ -282,30 +270,69 @@ public class Solution {
         PreparedStatement pstmt2 = null;
         ReturnValue return_value = OK;
 
-        if(getUserProfile(user.getId()).equals(User.badUser())) {   //TODO: can I use here the getUserProfile function?
-            return_value =  NOT_EXISTS;
-        } else {
-            try { //TODO: can I do here both?
-                pstmt1 = connection.prepareStatement(
-                        "DELETE FROM Follows " +
-                                "where user_id = ?");
-                pstmt1.setInt(1,user.getId());
-                pstmt1.executeUpdate();
-                pstmt2 = connection.prepareStatement(
-                        "DELETE FROM Users " +
-                                "where user_id = ?");
-                pstmt2.setInt(1,user.getId());
-                pstmt2.executeUpdate();
+        try {
+            pstmt1 = connection.prepareStatement(
+                    "DELETE FROM Follows " +
+                            "where user_id = ?");
+            pstmt1.setInt(1,user.getId());
+            pstmt1.executeUpdate();
+            pstmt2 = connection.prepareStatement(
+                    "DELETE FROM Users " +
+                            "where user_id = ?");
+            pstmt2.setInt(1, user.getId());
+            int affectedRows = pstmt2.executeUpdate();
+            if(affectedRows == 0) {
+                return_value = NOT_EXISTS;
+            }
+        } catch (SQLException e) {
+            return_value = ERROR;
+        }
+        finally {
+            try {
+                pstmt1.close();
+                pstmt2.close();
             } catch (SQLException e) {
                 e.printStackTrace();
+            }
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return return_value;
+    }
+
+    public static ReturnValue updateUserPremium(Integer userId)
+    {
+        Connection connection = DBConnector.getConnection();
+        PreparedStatement pstmt = null;
+        ReturnValue return_value = OK;
+        User user = getUserProfile(userId);
+
+        if(!user.equals(User.badUser()) && user.getPremium() == true) {
+            return_value = ALREADY_EXISTS;
+        } else {
+            try {
+                pstmt = connection.prepareStatement(
+                        "UPDATE Users " +
+                                "SET premium = ? " +
+                                "where user_id = ?");
+                pstmt.setInt(2, userId);
+                pstmt.setBoolean(1, true);
+                int affectedRows = pstmt.executeUpdate();
+                if(affectedRows == 0) {
+                    return_value = NOT_EXISTS;
+                }
+            } catch (SQLException e) {
                 return_value = ERROR;
             }
             finally {
                 try {
-                    pstmt1.close();
-                    pstmt2.close();
+                    pstmt.close();
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    return_value = ERROR;
+
                 }
                 try {
                     connection.close();
@@ -317,85 +344,44 @@ public class Solution {
         return return_value;
     }
 
-    public static ReturnValue updateUserPremium(Integer userId)
-    {
-        User user = getUserProfile(userId);
-        if(user.equals(User.badUser())) {//TODO: change this
-            return NOT_EXISTS;
-        }
-        if(user.getPremium() == true) {
-            return ALREADY_EXISTS;
-        }
-
-        // update premium
-        Connection connection = DBConnector.getConnection();
-        PreparedStatement pstmt = null;
-        try {
-            pstmt = connection.prepareStatement(
-                    "UPDATE Users " +
-                            "SET premium = ? " +
-                            "where user_id = ?");
-            pstmt.setInt(2,userId);
-            pstmt.setBoolean(1, true);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return ERROR;   // TODO: check
-        }
-        finally {
-            try {
-                pstmt.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-                return  ERROR;
-            }
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-                return  ERROR;
-            }
-        }
-        return OK;
-    }
-
     public static ReturnValue updateUserNotPremium(Integer userId)
     {
-        User user = getUserProfile(userId);
-        if(user.equals(User.badUser())) { //TODO: change
-            return NOT_EXISTS;
-        }
-        if(user.getPremium() == false) {
-            return ALREADY_EXISTS;
-        }
-
-        // update not premium
         Connection connection = DBConnector.getConnection();
         PreparedStatement pstmt = null;
-        try {
-            pstmt = connection.prepareStatement(
-                    "UPDATE Users " +
-                            "SET premium = ? " +
-                            "where user_id = ?");
-            pstmt.setInt(2,userId);
-            pstmt.setBoolean(1, false);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        finally {
+        ReturnValue return_value = OK;
+        User user = getUserProfile(userId);
+
+        if(!user.equals(User.badUser()) && user.getPremium() == false) {
+            return_value = ALREADY_EXISTS;
+        } else {
             try {
-                pstmt.close();
+                pstmt = connection.prepareStatement(
+                        "UPDATE Users " +
+                                "SET premium = ? " +
+                                "where user_id = ?");
+                pstmt.setInt(2,userId);
+                pstmt.setBoolean(1, false);
+                int affectedRows = pstmt.executeUpdate();
+                if(affectedRows == 0) {
+                    return_value = NOT_EXISTS;
+                }
             } catch (SQLException e) {
-                e.printStackTrace();
+                return_value = ERROR;
             }
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
+            finally {
+                try {
+                    pstmt.close();
+                } catch (SQLException e) {
+                    return_value = ERROR;
+                }
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    return_value = ERROR;
+                }
             }
         }
-        return OK;
+        return return_value;
     }
 
     public static ReturnValue addSong(Song song)
@@ -897,7 +883,7 @@ public class Solution {
         try {
             pstmt = connection.prepareStatement(
                     "UPDATE Songs SET play_count = ? + (SELECT play_count FROM Songs WHERE song_id = ?)" +
-                            "where song_id = ?");
+                            "WHERE song_id = ?");
             pstmt.setInt(1, times);
             pstmt.setInt(2, songId);
             pstmt.setInt(3, songId);
@@ -1325,18 +1311,15 @@ public class Solution {
     {
     	if(Integer.valueOf(e.getSQLState()) ==
     			PostgreSQLErrorCodes.CHECK_VIOLATION.getValue() ||
-    			Integer.valueOf(e.getSQLState()) ==
-    			PostgreSQLErrorCodes.NOT_NULL_VIOLATION.getValue())
+    			Integer.valueOf(e.getSQLState()) == PostgreSQLErrorCodes.NOT_NULL_VIOLATION.getValue())
 		{
     		return BAD_PARAMS;
 		}
-    	if(Integer.valueOf(e.getSQLState()) ==
-    			PostgreSQLErrorCodes.UNIQUE_VIOLATION.getValue())
+    	if(Integer.valueOf(e.getSQLState()) == PostgreSQLErrorCodes.UNIQUE_VIOLATION.getValue())
 		{
     		return ALREADY_EXISTS;
 		}
-    	if(Integer.valueOf(e.getSQLState()) ==
-    			PostgreSQLErrorCodes.FOREIGN_KEY_VIOLATION.getValue())
+    	if(Integer.valueOf(e.getSQLState()) == PostgreSQLErrorCodes.FOREIGN_KEY_VIOLATION.getValue())
 		{
     		return BAD_PARAMS; //????
 		}

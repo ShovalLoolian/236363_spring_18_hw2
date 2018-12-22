@@ -211,37 +211,72 @@ public class MyTest extends AbstractTest {
         songFromDB = Solution.getSong(9);
         assertEquals(0, songFromDB.getPlayCount());
     }
-//
-//    @Test
-//    public void followPlaylistTest() {
-//
-//        ReturnValue res;
-//        Playlist p = new Playlist();
-//        p.setId(10);
-//        p.setGenre("Pop");
-//        p.setDescription("Best pop songs of 2018");
-//
-//        res = Solution.addPlaylist(p);
-//        assertEquals(OK, res);
-//
-//        User u = new User();
-//        u.setId(100);
-//        u.setName("Nir");
-//        u.setCountry("Israel");
-//        u.setPremium(false);
-//
-//        res = Solution.addUser(u);
-//        assertEquals(OK, res);
-//
-//        res = Solution.followPlaylist(100, 10);
-//        assertEquals(OK , res);
-//
-//        res = Solution.followPlaylist(100, 10);
-//        assertEquals(ALREADY_EXISTS , res);
-//
-//        res = Solution.followPlaylist(101, 10);
-//        assertEquals(NOT_EXISTS , res);
-//    }
+
+    @Test
+    public void deleteTest() {
+
+        ReturnValue res;
+        Integer intRes;
+
+        Playlist p = new Playlist();
+        p.setId(10);
+        p.setGenre("Pop");
+        p.setDescription("Best pop songs of 2018");
+
+        res = Solution.addPlaylist(p);
+        assertEquals(OK, res);
+
+        User u = new User();
+        u.setId(100);
+        u.setName("Nir");
+        u.setCountry("Israel");
+        u.setPremium(false);
+
+        res = Solution.addUser(u);
+        assertEquals(OK, res);
+
+        Song s = new Song();
+        s.setId(30);
+        s.setName("Toy");
+        s.setCountry("Israel");
+        s.setGenre("Pop");
+
+        res = Solution.addSong(s);
+        assertEquals(OK, res);
+
+        res = Solution.followPlaylist(100, 10);
+        assertEquals(OK , res);
+
+        res = Solution.addSongToPlaylist(30, 10);
+        assertEquals(OK , res);
+
+        // delete user
+        intRes = Solution.getPlaylistFollowersCount(10);
+        assertEquals(Integer.valueOf(1), intRes);
+
+        res = Solution.deleteUser(u);
+        assertEquals(OK , res);
+
+        intRes = Solution.getPlaylistFollowersCount(10);
+        assertEquals(Integer.valueOf(0), intRes);
+
+        res = Solution.addUser(u);
+        assertEquals(OK, res);
+
+        res = Solution.followPlaylist(100, 10);
+        assertEquals(OK , res);
+
+        // delete song
+        res = Solution.deleteSong(s);
+        assertEquals(OK , res);
+
+        res = Solution.addSong(s);
+        assertEquals(OK , res);
+
+        res = Solution.addSongToPlaylist(30, 10);
+        assertEquals(OK , res);
+
+    }
     
     @Test
     public void addPlaylistTest() 
@@ -448,12 +483,19 @@ public class MyTest extends AbstractTest {
     {
         ReturnValue res;
         Song newSong = new Song();
+        Song newSong2 = new Song();
         Song songFromDB;
         newSong.setId(1);
         newSong.setName("Toy");
         newSong.setGenre("Pop");
         newSong.setCountry("Israel");
         res = Solution.addSong(newSong);
+        assertEquals(OK, res);
+        newSong2.setId(2);
+        newSong2.setName("Toy");
+        newSong2.setGenre("Pop");
+        newSong2.setCountry("Israel");
+        res = Solution.addSong(newSong2);
         assertEquals(OK, res);
         res = Solution.songPlay(1, 5);
         assertEquals(OK, res);
@@ -469,7 +511,7 @@ public class MyTest extends AbstractTest {
         assertEquals(OK, res);
         songFromDB = Solution.getSong(1);
         assertEquals(3, songFromDB.getPlayCount());
-        res = Solution.songPlay(2, 5);
+        res = Solution.songPlay(3, 5);
         assertEquals(NOT_EXISTS, res);
     }
 
