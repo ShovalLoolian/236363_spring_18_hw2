@@ -197,6 +197,9 @@ public class MyTest extends AbstractTest {
         newSong2.setName("Echame La Culpa");
         res = Solution.updateSongName(newSong2);
         assertEquals(OK, res);
+        newSong2.setName(" ");
+        res = Solution.updateSongName(newSong2);
+        assertEquals(OK, res);
 
         // check init playCount
         Song song2 = new Song();
