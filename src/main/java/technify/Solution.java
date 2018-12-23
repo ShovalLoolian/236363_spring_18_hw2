@@ -110,7 +110,6 @@ public class Solution {
         PreparedStatement pstmt_consistOf = null;
 
         try {
-
             pstmt_consistOf = connection.prepareStatement(
                     "DELETE FROM ConsistOf ");
             pstmt_consistOf.execute();
@@ -218,12 +217,12 @@ public class Solution {
             try {
                 pstmt.close();
             } catch (SQLException e) {
-                return_value = ERROR;
+                e.printStackTrace();
             }
             try {
                 connection.close();
             } catch (SQLException e) {
-                return_value = ERROR;
+                e.printStackTrace();
             }
         }
         return return_value;
@@ -373,12 +372,12 @@ public class Solution {
                 try {
                     pstmt.close();
                 } catch (SQLException e) {
-                    return_value = ERROR;
+                    e.printStackTrace();
                 }
                 try {
                     connection.close();
                 } catch (SQLException e) {
-                    return_value = ERROR;
+                    e.printStackTrace();
                 }
             }
         }
@@ -407,12 +406,12 @@ public class Solution {
             try {
                 pstmt_songs.close();
             } catch (SQLException e) {
-                return_value = ERROR;
+                e.printStackTrace();
             }
             try {
                 connection.close();
             } catch (SQLException e) {
-                return_value = ERROR;
+                e.printStackTrace();
             }
         }
         return return_value;
@@ -477,7 +476,6 @@ public class Solution {
             }
         } catch (SQLException e) {
             return_value = ERROR;
-            e.printStackTrace();
         }
         finally {
             try {
@@ -519,12 +517,12 @@ public class Solution {
             try {
                 pstmt.close();
             } catch (SQLException e) {
-                return_value = ERROR;
+                e.printStackTrace();
             }
             try {
                 connection.close();
             } catch (SQLException e) {
-                return_value = ERROR;
+                e.printStackTrace();
             }
         }
         return return_value;
@@ -532,7 +530,6 @@ public class Solution {
 
     public static ReturnValue addPlaylist(Playlist playlist)
     {
-    	//TODO: NIV
     	Connection connection = DBConnector.getConnection();
         PreparedStatement pstmt_playlists = null;
         ReturnValue return_value = OK;
@@ -554,12 +551,12 @@ public class Solution {
             try {
             	pstmt_playlists.close();
             } catch (SQLException e) {
-                return_value = ERROR;
+                e.printStackTrace();
             }
             try {
                 connection.close();
             } catch (SQLException e) {
-                return_value = ERROR;
+                e.printStackTrace();
             }
         }
         return return_value;
@@ -567,7 +564,6 @@ public class Solution {
 
     public static Playlist getPlaylist(Integer playlistId)
     {
-    	//TODO: NIV
     	 Connection connection = DBConnector.getConnection();
          PreparedStatement pstmt = null;
          Playlist return_playlist = new Playlist();
@@ -583,8 +579,7 @@ public class Solution {
              }
              results.close();
          } catch (SQLException e) {
-             //e.printStackTrace();
-             return_playlist = return_playlist.badPlaylist(); 
+             return_playlist = return_playlist.badPlaylist();
          }
          finally {
              try {
@@ -603,13 +598,12 @@ public class Solution {
 
     public static ReturnValue deletePlaylist(Playlist playlist)
     {
-			//TODO: NIV
     	   Connection connection = DBConnector.getConnection();
            PreparedStatement pstmt = null;
            PreparedStatement pstmt_consistOf = null;
            PreparedStatement pstmt_follows = null;
-           
            ReturnValue return_value = OK;
+
            try {
         	   pstmt_consistOf = connection.prepareStatement(
                        "DELETE FROM ConsistOf " +
@@ -631,7 +625,6 @@ public class Solution {
                else
             	   return_value = NOT_EXISTS;
            } catch (SQLException e) {
-               //e.printStackTrace()();
         	   return_value = getErrorValue(e);
            }
            finally {
@@ -640,12 +633,12 @@ public class Solution {
                    pstmt_consistOf.close();
                    pstmt_follows.close();
                } catch (SQLException e) {
-                   //e.printStackTrace()();
+                   e.printStackTrace();
                }
                try {
                    connection.close();
                } catch (SQLException e) {
-                   //e.printStackTrace()();
+                   e.printStackTrace();
                }
            }
         return return_value;
@@ -653,7 +646,6 @@ public class Solution {
 
     public static ReturnValue updatePlaylist(Playlist playlist)
     {
-    	//TODO: NIV
     	 Connection connection = DBConnector.getConnection();
          PreparedStatement pstmt = null;
          ReturnValue return_value = OK;
@@ -670,21 +662,18 @@ public class Solution {
              else
           	   return_value = NOT_EXISTS;
          } catch (SQLException e) {
-             //e.printStackTrace()();
         	 return_value = getErrorValue(e);
          }
          finally {
              try {
                  pstmt.close();
              } catch (SQLException e) {
-                 //e.printStackTrace()();
-            	 return_value = ERROR;
+                 e.printStackTrace();
              }
              try {
                  connection.close();
              } catch (SQLException e) {
-                 //e.printStackTrace()();
-            	 return_value = ERROR;
+                 e.printStackTrace();
              }
          }
         return return_value;
@@ -692,14 +681,10 @@ public class Solution {
 
     public static ReturnValue addSongToPlaylist(Integer songid, Integer playlistId)
     {
-    	//TODO: NIV
     	 Connection connection = DBConnector.getConnection();
          PreparedStatement pstmt = null;
          PreparedStatement pstmt_add = null;
          ReturnValue return_value = OK;
-         
-         //String queryForCheck = "SELECT * FROM Playlists WHERE playlist_id = ?"
-        //		 + " AND genre IN (SELECT genre FROM Songs WHERE song_id = ? )";
 
          String selectQeury = "(SELECT playlist_id, song_id FROM (Playlists INNER JOIN Songs ON (Playlists.genre = Songs.genre)) "
          + "WHERE Playlists.playlist_id = ? AND Songs.song_id = ?)";
@@ -725,7 +710,6 @@ public class Solution {
              }
              results.close(); 
          } catch (SQLException e) {
-             // shouldn't get here....
              return_value = getErrorValue(e);
          }
          finally {
@@ -747,10 +731,10 @@ public class Solution {
 
     public static ReturnValue removeSongFromPlaylist(Integer songid, Integer playlistId)
     {
-    	//TODO: NIV
     	  Connection connection = DBConnector.getConnection();
           PreparedStatement pstmt = null;
           ReturnValue return_value = OK;
+
           try {
               pstmt = connection.prepareStatement(
                       "DELETE FROM consistOf " +
@@ -764,19 +748,18 @@ public class Solution {
               else
            	   return_value = NOT_EXISTS;
           } catch (SQLException e) {
-              //e.printStackTrace()();
        	   return_value = getErrorValue(e);
           }
           finally {
               try {
                   pstmt.close();
               } catch (SQLException e) {
-                  //e.printStackTrace()();
+                  e.printStackTrace();
               }
               try {
                   connection.close();
               } catch (SQLException e) {
-                  //e.printStackTrace()();
+                  e.printStackTrace();
               }
           }
        return return_value;
@@ -844,10 +827,12 @@ public class Solution {
                 try {
                     pstmt.close();
                 } catch (SQLException e) {
+                    e.printStackTrace();
                 }
                 try {
                     connection.close();
                 } catch (SQLException e) {
+                    e.printStackTrace();
                 }
             }
         }
@@ -882,13 +867,11 @@ public class Solution {
             try {
                 pstmt.close();
             } catch (SQLException e) {
-                return_value = ERROR;
                 e.printStackTrace();
             }
             try {
                 connection.close();
             } catch (SQLException e) {
-                return_value = ERROR;
                 e.printStackTrace();
             }
         }
@@ -897,7 +880,6 @@ public class Solution {
 
     public static Integer getPlaylistTotalPlayCount(Integer playlistId)
     {
-    	//TODO: NIV
     	String queryForPlaylist = "SELECT SUM(play_count) FROM Songs WHERE song_id IN "
     			+ "(SELECT song_id FROM consistOf WHERE playlist_id = ?)";
     	
@@ -913,20 +895,17 @@ public class Solution {
             	return_value = results.getInt("sum");
             }
         } catch (SQLException e) {
-            //e.printStackTrace()();
        	 	return_value = 0;
         }
         finally {
             try {
                 pstmt.close();
             } catch (SQLException e) {
-                //e.printStackTrace()();
            	 return_value = 0;
             }
             try {
                 connection.close();
             } catch (SQLException e) {
-                //e.printStackTrace()();
            	 return_value = 0;
             }
         }
@@ -965,7 +944,6 @@ public class Solution {
 
     public static String getMostPopularSong()
     {
-    	//TODO: NIV
     	String playlistsAreEmpty = "No songs";
     	String return_value = playlistsAreEmpty;
     	String queryForPlaylist = "SELECT song_id FROM consistOf GROUP BY song_id"
@@ -987,20 +965,17 @@ public class Solution {
             	return_value = playlistsAreEmpty;
             }
         } catch (SQLException e) {
-            //e.printStackTrace()();
        	 	return_value = null;
         }
         finally {
             try {
                 pstmt.close();
             } catch (SQLException e) {
-                //e.printStackTrace()();
            	 return_value = null;
             }
             try {
                 connection.close();
             } catch (SQLException e) {
-                //e.printStackTrace()();
            	 return_value = null;
             }
         }
@@ -1046,13 +1021,11 @@ public class Solution {
 
     public static ArrayList<Integer> hottestPlaylistsOnTechnify()
     {
-    	//TODO: NIV			
     	String queryForPlaylist = "SELECT playlist_id, floor(AVG(play_count)) FROM Songs RIGHT OUTER JOIN consistOf ON"
     			+ "(Songs.song_id = consistOf.song_id) GROUP BY playlist_id"
     			+ " ORDER BY floor(AVG(play_count)) DESC, playlist_id ASC limit 10";
     					
     	ArrayList<Integer> playlistIds = new ArrayList<Integer>();
-    	
    	 	Connection connection = DBConnector.getConnection();
         PreparedStatement pstmt = null;
         
@@ -1064,24 +1037,20 @@ public class Solution {
             	playlistIds.add(results.getInt("playlist_id"));
             }
         } catch (SQLException e) {
-            //e.printStackTrace()();
-       	 	
+            e.printStackTrace();
         }
         finally {
             try {
                 pstmt.close();
             } catch (SQLException e) {
-                //e.printStackTrace()();
-           	 
+                e.printStackTrace();
             }
             try {
                 connection.close();
             } catch (SQLException e) {
-                //e.printStackTrace()();
-           	
+                e.printStackTrace();
             }
         }
-
         return playlistIds;
     }
 
@@ -1137,11 +1106,19 @@ public class Solution {
 
         Connection connection = DBConnector.getConnection();
         PreparedStatement pstmt = null;
+        PreparedStatement pstmt_country = null;
+        String country = "";
         ArrayList<Integer> topCountryPlaylists = new ArrayList<>();
 
-        if(getUserProfile(userId).getPremium() == true) {   //TODO: change this to SQL
-            try {
-                String country = getUserProfile(userId).getCountry();   //TODO: SQL
+        try {
+            if(isPremium(userId) == true)
+            {
+                pstmt_country = connection.prepareStatement("SELECT country FROM Users WHERE user_id = " + userId);
+                ResultSet results_country = pstmt_country.executeQuery();
+                if(results_country.next()) {
+                    country = results_country.getString("country");
+                }
+                results_country.close();
                 pstmt = connection.prepareStatement("SELECT playlist_id FROM " +
                         "(SELECT playlistsSongs.playlist_id, play_count FROM " +
                         "(SELECT ConsistOf.playlist_id, song_id FROM " +
@@ -1160,30 +1137,32 @@ public class Solution {
                     topCountryPlaylists.add(results.getInt("playlist_id"));
                 }
                 results.close();
-
+            }
+        } catch (SQLException e) {
+            //e.printStackTrace()();
+        }
+        finally {
+            try {
+                if(pstmt_country != null) {
+                    pstmt_country.close();
+                }
+                if(pstmt != null) {
+                    pstmt.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                connection.close();
             } catch (SQLException e) {
                 //e.printStackTrace()();
             }
-            finally {
-                try {
-                    pstmt.close();
-                } catch (SQLException e) {
-                    //e.printStackTrace()();
-                }
-                try {
-                    connection.close();
-                } catch (SQLException e) {
-                    //e.printStackTrace()();
-                }
-            }
         }
-
         return topCountryPlaylists;
     }
 
     public static ArrayList<Integer> getPlaylistRecommendation (Integer userId)
     {
-        //TODO: NIV
         Connection connection = DBConnector.getConnection();
         PreparedStatement pstmt = null;
         ArrayList<Integer> playlistsIds = new ArrayList<>();
@@ -1205,7 +1184,6 @@ public class Solution {
                 + " WHERE user_id IN ("+getSimilarUsersId_noLimit+") AND playlist_id NOT IN ("+playlistIdsOfUser+")"
                 + "GROUP BY playlist_id ORDER BY COUNT(playlist_id) DESC, playlist_id ASC LIMIT 5";
 
-
         try {
             pstmt = connection.prepareStatement(stringQuery);
             pstmt.setInt(1,userId);
@@ -1219,18 +1197,17 @@ public class Solution {
             }
             results.close();
         } catch (SQLException e) {
-            //e.printStackTrace()();
         }
         finally {
             try {
                 pstmt.close();
             } catch (SQLException e) {
-                //e.printStackTrace()();
+                e.printStackTrace();
             }
             try {
                 connection.close();
             } catch (SQLException e) {
-                //e.printStackTrace()();
+                e.printStackTrace();
             }
         }
         return playlistsIds;
@@ -1238,7 +1215,6 @@ public class Solution {
 
     public static ArrayList<Integer> getSongsRecommendationByGenre(Integer userId, String genre)
     {
-    	//TODO: NIV
     	Connection connection = DBConnector.getConnection();
         PreparedStatement pstmt = null;
         
@@ -1264,7 +1240,6 @@ public class Solution {
             }
             results.close();
         } catch (SQLException e) {
-        	
         }
         finally {
             try {
@@ -1297,9 +1272,39 @@ public class Solution {
 		}
     	if(Integer.valueOf(e.getSQLState()) == PostgreSQLErrorCodes.FOREIGN_KEY_VIOLATION.getValue())
 		{
-    		return BAD_PARAMS; //????
+    		return BAD_PARAMS;
 		}
     	return ERROR;
+    }
+
+    private static boolean isPremium(Integer userId)
+    {
+        Connection connection = DBConnector.getConnection();
+        PreparedStatement pstmt = null;
+        boolean return_value = false;
+        try {
+            pstmt = connection.prepareStatement("SELECT premium FROM Users WHERE user_id = " + userId);
+            ResultSet results = pstmt.executeQuery();
+            if(results.next() == true) {
+                return_value = results.getBoolean("premium");
+            }
+            results.close();
+
+        } catch (SQLException e) {
+        }
+        finally {
+            try {
+                pstmt.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return return_value;
     }
 
 }
